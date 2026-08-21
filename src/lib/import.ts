@@ -191,3 +191,84 @@ export function parseJsonImport(json: string): ImportResult {
     return { cards: [], warnings: [`JSON parse error: ${(e as Error).message}`] }
   }
 }
+
+export function parseCsvImport(csv: string, fallbackTopic = 'General'): ImportResult {
+  const warnings: string[] = []
+  const text = csv.trim()
+  if (!text) return { cards: [], warnings: ['No CSV content.'] }
+  const lines = text.split(/\r?\n/).filter((l) => l.trim())
+  if (lines.length === 0) return { cards: [], warnings: ['Empty CSV.'] }
+
+  // Detect header: if first line contains front/back/question/answer/topic
+  const header = lines[0]!.toLowerCase()
+  const hasHeader = /front|question|q\b/.test(header) && /back|answer|a\b/.test(header)
+  const start = hasHeader ? 1 : 0
+  if (hasHeader && lines.length === 1) return { cards: [], warnings: ['CSV only has header.'] }
+
+  const cards: RawCard[] = []
+  for (let i = start; i < lines.length; i++) {
+    const cols = splitCsvLine(lines[i]!)
+    if (cols.length < 2) {
+      warnings.push(`Line ${i + 1} skipped — needs at least 2 columns`)
+      continue
+    }
+    const front = cols[0]!.trim()
+    const back = cols[1]!.trim()
+    const topic = cols[2]?.trim() || fallbackTopic
+    if (!front || !back) {
+      warnings.push(`Line ${i + 1} skipped — missing front or back`)
+      continue
+    }
+    cards.push({ front, back, topic })
+  }
+  if (cards.length === 0) warnings.push('No cards found in CSV — check format: front, back, topic')
+  return { cards, warnings }
+}
+
+function splitCsvLine(line: string): string[] {
+  const out: string[] = []
+  let cur = ''
+  let inQ = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]!
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') {
+        cur += '"'
+        i++
+      } else inQ = !inQ
+    } else if (ch === ',' && !inQ) {
+      out.push(cur)
+      cur = ''
+    } else cur += ch
+  }
+  out.push(cur)
+  return out.map((s) => s.trim().replace(/^"|"$/g, ''))
+}
+
+export type ImportKind = 'json' | 'csv' | 'text'
+
+export function detectImportKind(input: string): ImportKind {
+  const t = input.trim()
+  if (!t) return 'text'
+  if (t.startsWith('{') || t.startsWith('[')) {
+    try {
+      JSON.parse(t)
+      return 'json'
+    } catch {
+      return 'text'
+    }
+  }
+  const firstLine = t.split('\n')[0] ?? ''
+  if (firstLine.includes(',') && t.split('\n').length > 1) {
+    const cols = splitCsvLine(firstLine)
+    if (cols.length >= 2) return 'csv'
+  }
+  return 'text'
+}
+
+export function parseAny(input: string, fallbackTopic = 'General'): ImportResult {
+  const kind = detectImportKind(input)
+  if (kind === 'json') return parseJsonImport(input)
+  if (kind === 'csv') return parseCsvImport(input, fallbackTopic)
+  return autoSegment(input, fallbackTopic)
+}
