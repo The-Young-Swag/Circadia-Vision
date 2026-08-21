@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { db, type Card } from '#/db/dexie'
+import type { Card } from '#/db/dexie'
 import { seedIfEmpty } from '#/db/seed'
+import { cardRepository } from '#/repositories/cardRepository'
+import { settingsRepository } from '#/repositories/settingsRepository'
+import { signalRepository } from '#/repositories/signalRepository'
 import { type Grade, daysOverdue } from '#/lib/sm2'
 import { adaptQueue, buildQueue } from '#/lib/adapt'
 import { useSignalCapture } from '#/hooks/useSignalCapture'
@@ -44,20 +47,19 @@ function Review() {
   const current = queue[idx] ?? null
   const progress = queue.length ? `${idx + 1} / ${queue.length}` : '0 / 0'
 
-  // Load — synchronizes with external system (Dexie), correct useEffect
+  // Load — synchronizes with external system (Dexie) via repository, not direct db
   useEffect(() => {
     let cancelled = false
     seedIfEmpty().then(load)
     async function load() {
-      const [cs, settings] = await Promise.all([
-        db.cards.toArray(),
-        db.appSettings.get('adaptiveOptIn').then((r) => (r ? (JSON.parse(r.value) as boolean) : false)),
+      const [cs, settings, n] = await Promise.all([
+        cardRepository.findAll(),
+        settingsRepository.getAdaptiveOptIn(),
+        settingsRepository.getCalibrationSessions(),
       ])
       if (cancelled) return
       setCards(cs)
       setOptIn(settings)
-      const n = await db.appSettings.get('calibrationSessions').then((r) => (r ? (JSON.parse(r.value) as number) : 0))
-      if (cancelled) return
       setCalibrationN(n)
       setQueue(buildQueue(cs))
     }
@@ -72,7 +74,7 @@ function Review() {
     minutesRef.current.push(live)
     if (minutesRef.current.length > 12) minutesRef.current.shift()
 
-    void db.sessionSignals.add({
+    void signalRepository.add({
       id: crypto.randomUUID().slice(0, 8),
       sessionId: sessionIdRef.current,
       minuteIndex: minutesRef.current.length - 1,
@@ -127,7 +129,7 @@ function Review() {
         setIdx(nextIdx)
         setShowBack(false)
       }
-      setCards(await db.cards.toArray())
+      setCards(await cardRepository.findAll())
     },
     [current, live, calibrationN, idx, queue.length, breakRec],
   )

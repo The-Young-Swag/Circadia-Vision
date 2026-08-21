@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
-import { db, type Card, type ReviewSession } from '#/db/dexie'
+import type { Card, ReviewSession } from '#/db/dexie'
 import { seedIfEmpty } from '#/db/seed'
+import { cardRepository } from '#/repositories/cardRepository'
+import { sessionRepository } from '#/repositories/sessionRepository'
+import { settingsRepository } from '#/repositories/settingsRepository'
 
 // Custom Hook — reusable React behavior (rule 13)
 // Encapsulates sync with external system (Dexie) — correct useEffect usage
@@ -18,13 +21,13 @@ export function useDashboardData() {
     })
 
     async function refresh() {
-      const [c, s] = await Promise.all([db.cards.toArray(), db.reviewSessions.toArray()])
+      const [c, s] = await Promise.all([cardRepository.findAll(), sessionRepository.findAll()])
       if (cancelled) return
       setCards(c)
       setSessions(s)
-      const v = await db.appSettings.get('adaptiveOptIn')
+      const v = await settingsRepository.getAdaptiveOptIn()
       if (cancelled) return
-      setOptIn(v ? (JSON.parse(v.value) as boolean) : null)
+      setOptIn(v)
     }
 
     const id = setInterval(() => {
@@ -38,7 +41,7 @@ export function useDashboardData() {
   }, [])
 
   const setOptInAndPersist = async (value: boolean) => {
-    await db.appSettings.put({ key: 'adaptiveOptIn', value: JSON.stringify(value) })
+    await settingsRepository.setAdaptiveOptIn(value)
     setOptIn(value)
   }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { db, type Card } from '#/db/dexie'
+import type { Card } from '#/db/dexie'
+import { cardRepository } from '#/repositories/cardRepository'
 
 // Reusable React behavior: sync with external store (Dexie)
 // Keeps data infrastructure out of the UI component (rule 20)
@@ -7,7 +8,7 @@ export function useLibraryData() {
   const [cards, setCards] = useState<Card[]>([])
 
   const refresh = useCallback(async () => {
-    setCards(await db.cards.toArray())
+    setCards(await cardRepository.findAll())
   }, [])
 
   useEffect(() => {

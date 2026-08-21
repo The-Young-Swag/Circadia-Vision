@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { db, type BaselineFeature } from '#/db/dexie'
 import { type BaselineMap, createEmptyBaseline, hasBaseline } from '#/lib/baseline'
+import { baselineRepository } from '#/repositories/baselineRepository'
 
 export function useBaseline() {
   const [baseline, setBaseline] = useState<BaselineMap>(createEmptyBaseline())
@@ -8,17 +8,14 @@ export function useBaseline() {
 
   useEffect(() => {
     let alive = true
-    db.baselineFeatures.toArray().then((rows: BaselineFeature[]) => {
+    baselineRepository.getAll().then((map) => {
       if (!alive) return
-      const map = createEmptyBaseline()
-      for (const r of rows) map[r.name] = { mean: r.mean, variance: r.variance, stddev: r.stddev, sampleCount: r.sampleCount }
       setBaseline(map)
       setReady(true)
     })
     const interval = setInterval(() => {
-      db.baselineFeatures.toArray().then((rows: BaselineFeature[]) => {
-        const map = createEmptyBaseline()
-        for (const r of rows) map[r.name] = { mean: r.mean, variance: r.variance, stddev: r.stddev, sampleCount: r.sampleCount }
+      void baselineRepository.getAll().then((map) => {
+        if (!alive) return
         setBaseline(map)
       })
     }, 5000)

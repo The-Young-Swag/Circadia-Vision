@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { db, type Card } from '#/db/dexie'
+import type { Card } from '#/db/dexie'
 import { parseAny, type RawCard } from '#/lib/import'
+import { cardRepository } from '#/repositories/cardRepository'
 import { Upload, FileText, Sparkles, X, Plus, Trash2, Check, Info, ChevronDown } from 'lucide-react'
 
 // Templates — plain-language examples anyone can use
@@ -140,7 +141,7 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
         easeFactor: 2.5,
         dueDate: today,
       }))
-    if (toAdd.length) await db.cards.bulkAdd(toAdd)
+    if (toAdd.length) await cardRepository.createMany(toAdd)
     onImported()
     onClose()
   }

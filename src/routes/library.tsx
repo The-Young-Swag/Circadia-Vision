@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { db, type Card } from '#/db/dexie'
+import type { Card } from '#/db/dexie'
 import { exportToJson, exportToMarkdown } from '#/lib/import'
+import { cardRepository } from '#/repositories/cardRepository'
 import { Search, Plus, Upload, Download, Filter, X } from 'lucide-react'
 import { CardDialog } from '#/components/library/CardDialog'
 import { ImportWizard } from '#/components/library/ImportWizard'
@@ -107,7 +108,7 @@ function Library() {
           cards={filtered}
           onEdit={setEditing}
           onDelete={async (id) => {
-            await db.cards.delete(id)
+            await cardRepository.delete(id)
             void refresh()
           }}
         />

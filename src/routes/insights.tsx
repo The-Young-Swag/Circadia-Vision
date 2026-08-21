@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
-import { db, type Card, type ReviewSession } from '#/db/dexie'
+import type { Card, ReviewSession } from '#/db/dexie'
 import { retentionByTopic, sessionLengthVsPerf, actionablePattern } from '#/lib/insights'
+import { cardRepository } from '#/repositories/cardRepository'
+import { sessionRepository } from '#/repositories/sessionRepository'
 
 export const Route = createFileRoute('/insights')({ component: Insights })
 
@@ -11,12 +13,12 @@ function Insights() {
 
   useEffect(() => {
     ;(async () => {
-      setCards(await db.cards.toArray())
-      setSessions(await db.reviewSessions.toArray())
+      setCards(await cardRepository.findAll())
+      setSessions(await sessionRepository.findAll())
     })()
     const id = setInterval(async () => {
-      setCards(await db.cards.toArray())
-      setSessions(await db.reviewSessions.toArray())
+      setCards(await cardRepository.findAll())
+      setSessions(await sessionRepository.findAll())
     }, 2000)
     return () => clearInterval(id)
   }, [])

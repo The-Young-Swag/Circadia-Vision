@@ -2,11 +2,16 @@
  * Review service — React-independent domain orchestration.
  * Keeps SM-2, baseline, and persistence out of components (React 19 rule 11).
  */
-import { db } from '#/db/dexie'
 import type { Card } from '#/db/dexie'
 import { sm2, type Grade } from '#/lib/sm2'
 import { updateEwma, DEFAULT_ALPHA } from '#/lib/baseline'
 import type { AggregatedFeatures } from '#/lib/signals'
+import { cardRepository } from '#/repositories/cardRepository'
+import { sessionRepository } from '#/repositories/sessionRepository'
+import { baselineRepository } from '#/repositories/baselineRepository'
+import { settingsRepository } from '#/repositories/settingsRepository'
+import { db } from '#/db/dexie'
+import { GradeSchema } from '#/features/review/schemas'
 
 type GradeResult = {
   nextInterval: number
@@ -16,9 +21,12 @@ type GradeResult = {
 }
 
 export function calculateNextReview(card: Card, grade: Grade, now: Date = new Date()): GradeResult {
+  // Validate at domain boundary — Zod ensures grade is 0-3 (Guide §8, §9)
+  const parsed = GradeSchema.safeParse(grade)
+  if (!parsed.success) throw new Error(`Invalid grade: ${grade}`)
   const r = sm2(
     { interval: card.interval, repetitions: card.repetitions, easeFactor: card.easeFactor },
-    grade,
+    parsed.data,
     now,
   )
   return {
@@ -39,7 +47,7 @@ export async function persistGrade(params: {
   const now = new Date()
   const result = calculateNextReview(params.card, params.grade, now)
 
-  await db.cards.update(params.card.id, {
+  await cardRepository.update(params.card.id, {
     interval: result.nextInterval,
     repetitions: result.nextRepetitions,
     easeFactor: result.nextEase,
@@ -47,7 +55,7 @@ export async function persistGrade(params: {
     lastReviewed: now.toISOString(),
   })
 
-  await db.reviewSessions.add({
+  await sessionRepository.create({
     id: crypto.randomUUID().slice(0, 8),
     cardId: params.card.id,
     sessionId: params.sessionId,
@@ -64,11 +72,11 @@ export async function persistGrade(params: {
       ['wpm', params.live.wpm],
     ]
     for (const [name, value] of features) {
-      const row = await db.baselineFeatures.get(name)
+      const row = await baselineRepository.getByName(name)
       if (!row) continue
       const snap = { mean: row.mean, variance: row.variance, stddev: row.stddev, sampleCount: row.sampleCount }
       const next = updateEwma(snap, value, DEFAULT_ALPHA)
-      await db.baselineFeatures.put({
+      await baselineRepository.upsert({
         name: name as never,
         mean: next.mean,
         variance: next.variance,
@@ -85,7 +93,7 @@ export async function persistGrade(params: {
 export async function bumpCalibration(currentN: number): Promise<number> {
   const nextN = currentN + 1
   if (nextN <= 12) {
-    await db.appSettings.put({ key: 'calibrationSessions', value: JSON.stringify(nextN) })
+    await settingsRepository.setCalibrationSessions(nextN)
   }
   return nextN
 }

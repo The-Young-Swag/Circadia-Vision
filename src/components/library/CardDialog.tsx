@@ -1,5 +1,6 @@
 import { useEffect, useState, useTransition } from 'react'
-import { db, type Card } from '#/db/dexie'
+import type { Card } from '#/db/dexie'
+import { cardRepository } from '#/repositories/cardRepository'
 
 type CardDialogProps = {
   card?: Card
@@ -29,14 +30,14 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
       const now = new Date().toISOString()
       const today = now.slice(0, 10)
       if (card) {
-        await db.cards.update(card.id, {
+        await cardRepository.update(card.id, {
           front: front.trim(),
           back: back.trim(),
           topic: topic.trim() || 'General',
           targetDate: targetDate || undefined,
         })
       } else {
-        await db.cards.add({
+        await cardRepository.create({
           id: crypto.randomUUID().slice(0, 8),
           front: front.trim(),
           back: back.trim(),
