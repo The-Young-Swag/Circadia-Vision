@@ -21,3 +21,8 @@ coverage
 .opencode
 .devcontainer
 .agents
+.cta.json
+.cursorrules
+AGENTS.md
+opencode.json
+skills-lock.json
