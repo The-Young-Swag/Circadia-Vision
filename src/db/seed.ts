@@ -1,5 +1,9 @@
 import { db, type Card } from '#/db/dexie'
 import { faker } from '@faker-js/faker'
+import { DEFAULT_ALPHA } from '#/lib/baseline'
+
+// Reference to keep import used and avoid ineffective dynamic chunk
+void DEFAULT_ALPHA
 
 const TOPICS = [
   'Anatomy',
@@ -124,8 +128,6 @@ export async function seedIfEmpty(): Promise<void> {
   await db.reviewSessions.bulkAdd(sessions)
 
   // Seed baseline features (pretend 10 sessions already calibrated)
-  const { DEFAULT_ALPHA } = await import('#/lib/baseline')
-  void DEFAULT_ALPHA
   await db.baselineFeatures.bulkAdd([
     { name: 'interKeyLatency', mean: 118, variance: 420, stddev: 20.5, sampleCount: 12, lastUpdated: new Date().toISOString() },
     { name: 'dwellTime', mean: 92, variance: 180, stddev: 13.4, sampleCount: 12, lastUpdated: new Date().toISOString() },
