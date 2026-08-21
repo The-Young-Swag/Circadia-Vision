@@ -1,5 +1,5 @@
-import { db, type BaselineFeature } from '#/db/dexie'
-import { type BaselineMap, createEmptyBaseline, type FeatureName } from '#/lib/baseline'
+import { db, type BaselineFeature, type FeatureName } from '#/db/dexie'
+import { type BaselineMap, createEmptyBaseline } from '#/lib/baseline'
 
 export const baselineRepository = {
   async getAll(): Promise<BaselineMap> {

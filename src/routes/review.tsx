@@ -31,7 +31,7 @@ function Review() {
   const [breakRec, setBreakRec] = useState<number | null>(null)
   const [isBreak, setIsBreak] = useState(false)
   const [calibrationN, setCalibrationN] = useState(0)
-  const [optIn, setOptIn] = useState(false)
+  const [optIn, setOptIn] = useState<boolean>(false)
 
   // Constants for session — refs, not state (never changes, not rendered from state)
   const sessionIdRef = useRef(`sess-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`)
@@ -59,7 +59,7 @@ function Review() {
       ])
       if (cancelled) return
       setCards(cs)
-      setOptIn(settings)
+      setOptIn(settings ?? false)
       setCalibrationN(n)
       setQueue(buildQueue(cs))
     }
