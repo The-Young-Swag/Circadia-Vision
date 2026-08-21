@@ -1,47 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { db, type Card } from '#/db/dexie'
 
-export function CardDialog({
-  card,
-  onClose,
-  onSaved,
-}: {
+type CardDialogProps = {
   card?: Card
   onClose: () => void
   onSaved: () => void
-}) {
+}
+
+// Pure: UI = f(card). Local form state is owned here, synced when card identity changes.
+export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
   const [front, setFront] = useState(card?.front ?? '')
   const [back, setBack] = useState(card?.back ?? '')
   const [topic, setTopic] = useState(card?.topic ?? 'General')
   const [targetDate, setTargetDate] = useState(card?.targetDate ?? '')
+  const [isPending, startTransition] = useTransition()
 
-  const save = async () => {
+  // Keep derived state in sync when editing a different card (avoid stale duplication)
+  useEffect(() => {
+    setFront(card?.front ?? '')
+    setBack(card?.back ?? '')
+    setTopic(card?.topic ?? 'General')
+    setTargetDate(card?.targetDate ?? '')
+  }, [card?.id, card?.front, card?.back, card?.topic, card?.targetDate])
+
+  const save = () => {
     if (!front.trim() || !back.trim()) return
-    const now = new Date().toISOString()
-    const today = now.slice(0, 10)
-    if (card) {
-      await db.cards.update(card.id, {
-        front: front.trim(),
-        back: back.trim(),
-        topic: topic.trim() || 'General',
-        targetDate: targetDate || undefined,
-      })
-    } else {
-      await db.cards.add({
-        id: crypto.randomUUID().slice(0, 8),
-        front: front.trim(),
-        back: back.trim(),
-        topic: topic.trim() || 'General',
-        targetDate: targetDate || undefined,
-        createdAt: now,
-        interval: 0,
-        repetitions: 0,
-        easeFactor: 2.5,
-        dueDate: today,
-      })
-    }
-    onSaved()
-    onClose()
+    startTransition(async () => {
+      const now = new Date().toISOString()
+      const today = now.slice(0, 10)
+      if (card) {
+        await db.cards.update(card.id, {
+          front: front.trim(),
+          back: back.trim(),
+          topic: topic.trim() || 'General',
+          targetDate: targetDate || undefined,
+        })
+      } else {
+        await db.cards.add({
+          id: crypto.randomUUID().slice(0, 8),
+          front: front.trim(),
+          back: back.trim(),
+          topic: topic.trim() || 'General',
+          targetDate: targetDate || undefined,
+          createdAt: now,
+          interval: 0,
+          repetitions: 0,
+          easeFactor: 2.5,
+          dueDate: today,
+        })
+      }
+      onSaved()
+      onClose()
+    })
   }
 
   return (
@@ -118,11 +128,15 @@ export function CardDialog({
           </p>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <button className="btn-ghost" onClick={onClose}>
+          <button className="btn-ghost" onClick={onClose} disabled={isPending}>
             Cancel
           </button>
-          <button className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed" onClick={save} disabled={!front.trim() || !back.trim()}>
-            {card ? 'Save changes' : 'Add card'}
+          <button
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={save}
+            disabled={!front.trim() || !back.trim() || isPending}
+          >
+            {isPending ? 'Saving…' : card ? 'Save changes' : 'Add card'}
           </button>
         </div>
       </div>
