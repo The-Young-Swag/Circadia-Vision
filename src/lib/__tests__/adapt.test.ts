@@ -3,17 +3,18 @@ import { adaptQueue, buildQueue } from '#/lib/adapt'
 import type { Card } from '#/db/dexie'
 
 function card(overrides: Partial<Card> & { front: string }): Card {
+  const { front, ...rest } = overrides
   return {
     id: Math.random().toString(36).slice(2, 8),
-    front: overrides.front,
+    front,
     back: 'B',
     topic: 'General',
     createdAt: new Date().toISOString(),
-    interval: overrides.interval ?? 0,
-    repetitions: overrides.repetitions ?? 0,
-    easeFactor: overrides.easeFactor ?? 2.5,
-    dueDate: overrides.dueDate ?? '2026-08-21',
-    ...overrides,
+    interval: rest.interval ?? 0,
+    repetitions: rest.repetitions ?? 0,
+    easeFactor: rest.easeFactor ?? 2.5,
+    dueDate: rest.dueDate ?? '2026-08-21',
+    ...rest,
   }
 }
 

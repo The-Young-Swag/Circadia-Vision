@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { db, type Card } from '#/db/dexie'
 import { seedIfEmpty } from '#/db/seed'
 import { sm2, type Grade, daysOverdue } from '#/lib/sm2'

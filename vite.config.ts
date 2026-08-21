@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { devtools } from '@tanstack/devtools-vite'
 
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
@@ -14,7 +14,7 @@ const config = defineConfig({
     tailwindcss(),
     tanstackStart({
       srcDirectory: 'src',
-      router: { routeTree: 'src/routeTree.gen.ts' },
+      router: { generatedRouteTree: 'src/routeTree.gen.ts' },
     }),
     viteReact(),
     VitePWA({

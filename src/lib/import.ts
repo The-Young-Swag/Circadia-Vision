@@ -33,8 +33,6 @@ export function autoSegment(input: string, fallbackTopic = 'General'): ImportRes
   // Split by headers to get topic chunks
   const headerRegex = /^#{1,6}\s+(.+)$/gm
   const topics: { topic: string; body: string }[] = []
-  let lastIdx = 0
-  let lastTopic = fallbackTopic
   let m: RegExpExecArray | null
 
   // Extract headers positions

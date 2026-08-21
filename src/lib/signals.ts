@@ -77,7 +77,6 @@ export type CaptureHandle = {
 
 export function createCapture(): CaptureHandle {
   const events: TimingEvent[] = []
-  let lastKeyDown: number | null = null
   let lastKeyUp: number | null = null
   let pendingDwellStart: number | null = null
 
@@ -89,7 +88,6 @@ export function createCapture(): CaptureHandle {
       const ikl = lastKeyUp !== null ? now - lastKeyUp : 0
       // dwell will be set on keyup; store pending
       pendingDwellStart = now
-      lastKeyDown = now
       // we don't store key, only timing; push placeholder to be completed on keyup
       // Instead we push on keyup when we know dwell; for hold we track now.
       // For simplicity push on keydown with current ikl, dwell=0, correct flag
@@ -119,7 +117,6 @@ export function createCapture(): CaptureHandle {
     getEvents: () => [...events],
     reset: () => {
       events.length = 0
-      lastKeyDown = null
       lastKeyUp = null
       pendingDwellStart = null
     },
