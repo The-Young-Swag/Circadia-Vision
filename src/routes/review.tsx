@@ -52,7 +52,8 @@ function Review() {
   const [cards, setCards] = useState<Card[]>([])
   const [queue, setQueue] = useState<Card[]>([])
   const [idx, setIdx] = useState(0)
-  const [showBack, setShowBack] = useState(false)
+  const [showBack, setShowBack] =
+    useState(false)
 
   const [adaptReason, setAdaptReason] =
     useState<string | null>(null)
@@ -69,11 +70,8 @@ function Review() {
   const [optIn, setOptIn] =
     useState<boolean>(false)
 
-  /**
-   * Once the user declines an adaptive suggestion,
-   * do not offer another one during this session.
-   */
-  const dismissedRef = useRef(false)
+  const dismissedRef =
+    useRef(false)
 
   const pendingAdaptRef = useRef<{
     reason: string
@@ -81,20 +79,15 @@ function Review() {
     adapted: ReturnType<typeof adaptQueue>
   } | null>(null)
 
-  /**
-   * One session identity for the whole review session.
-   */
   const sessionIdRef = useRef(
     `sess-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 10)}`,
   )
 
-  const startedAtRef = useRef(Date.now())
+  const startedAtRef =
+    useRef(Date.now())
 
-  /**
-   * Rolling live signal samples captured during this session.
-   */
   const minutesRef =
     useRef<AggregatedFeatures[]>([])
 
@@ -103,41 +96,28 @@ function Review() {
     hasBaseline,
   } = useBaseline()
 
-  /**
-   * Adaptive sensing only becomes active after:
-   * 1. the user opted in
-   * 2. a baseline exists
-   */
   const captureEnabled =
     optIn && hasBaseline
 
   const { live } =
     useSignalCapture(captureEnabled)
 
-  /**
-   * Calibration is based on COMPLETED SESSIONS.
-   */
   const isCalibrating =
     calibrationN < 5 && !hasBaseline
 
-  const current =
-    queue[idx] ?? null
+  const current = queue[idx]
 
   const progress = queue.length
-    ? `${Math.min(idx + 1, queue.length)} / ${queue.length}`
+    ? `${Math.min(
+        idx + 1,
+        queue.length,
+      )} / ${queue.length}`
     : '0 / 0'
 
-  /**
-   * Initial data load.
-   */
   useEffect(() => {
-    let cancelled = false
-
     async function load() {
       await seedIfEmpty()
-
-      if (cancelled) return
-
+  
       const [
         cs,
         settings,
@@ -147,31 +127,20 @@ function Review() {
         settingsRepository.getAdaptiveOptIn(),
         settingsRepository.getCalibrationSessions(),
       ])
-
-      if (cancelled) return
-
+  
       setCards(cs)
       setOptIn(settings ?? false)
-      setCalibrationN(Math.min(n, 5))
-      setQueue(buildQueue(cs))
+      setCalibrationN(
+        Math.min(n, 5),
+      )
+      setQueue(
+        buildQueue(cs),
+      )
     }
-
+  
     void load()
-
-    return () => {
-      cancelled = true
-    }
   }, [])
 
-  /**
-   * Live rhythm processing.
-   *
-   * Important:
-   * - signal data is low-frequency
-   * - no raw key content is stored
-   * - adaptation is offered, never silently applied
-   * - a dismissed suggestion stays dismissed for this session
-   */
   useEffect(() => {
     if (
       !live ||
@@ -183,16 +152,21 @@ function Review() {
 
     minutesRef.current.push(live)
 
-    if (minutesRef.current.length > 12) {
+    if (
+      minutesRef.current.length >
+      12
+    ) {
       minutesRef.current.shift()
     }
 
     void signalRepository.add({
       id: crypto.randomUUID().slice(0, 8),
-      sessionId: sessionIdRef.current,
+      sessionId:
+        sessionIdRef.current,
       minuteIndex:
         minutesRef.current.length - 1,
-      timestamp: new Date().toISOString(),
+      timestamp:
+        new Date().toISOString(),
       interKeyLatency:
         live.interKeyLatency,
       dwellTime:
@@ -208,13 +182,8 @@ function Review() {
         baseline,
       )
 
-    /**
-     * Do not fabricate recovery history.
-     *
-     * If the baseline system cannot calculate a recommendation
-     * without samples, simply don't show a break recommendation.
-     */
-    const recoverySamples: number[] = []
+    const recoverySamples: number[] =
+      []
 
     const rec =
       recoverySamples.length > 0
@@ -229,8 +198,10 @@ function Review() {
         {
           isElevated: elevated,
           hasBaseline,
-          adaptiveOptIn: optIn,
-          breakMinutes: rec ?? 5,
+          adaptiveOptIn:
+            optIn,
+          breakMinutes:
+            rec ?? 5,
         },
       )
 
@@ -261,18 +232,16 @@ function Review() {
     cards,
   ])
 
-  /**
-   * Persist one card grade.
-   *
-   * Calibration is deliberately NOT incremented here.
-   * It increments only when the whole session finishes.
-   */
   const handleGrade = useCallback(
     async (grade: Grade) => {
-      if (!current) return
+      if (idx >= queue.length) {
+        return
+      }
+
+      const card = queue[idx]
 
       await persistGrade({
-        card: current,
+        card,
         grade,
         sessionId:
           sessionIdRef.current,
@@ -281,11 +250,9 @@ function Review() {
         live,
       })
 
-      const nextIdx = idx + 1
+      const nextIdx =
+        idx + 1
 
-      /**
-       * Session completed.
-       */
       if (
         nextIdx >= queue.length
       ) {
@@ -314,10 +281,9 @@ function Review() {
       setCards(refreshed)
     },
     [
-      current,
-      live,
+      queue,
       idx,
-      queue.length,
+      live,
       calibrationN,
     ],
   )
@@ -330,23 +296,23 @@ function Review() {
     )
   }
 
-  /**
-   * The queue has been exhausted.
-   */
-  if (!current) {
-    const minutes = Math.max(
-      0,
-      Math.round(
-        (Date.now() -
-          startedAtRef.current) /
-          60000,
-      ),
-    )
+  if (idx >= queue.length) {
+    const minutes =
+      Math.max(
+        0,
+        Math.round(
+          (Date.now() -
+            startedAtRef.current) /
+            60000,
+        ),
+      )
 
     return (
       <SessionComplete
         minutes={minutes}
-        totalCards={queue.length}
+        totalCards={
+          queue.length
+        }
         live={live}
       />
     )
@@ -356,7 +322,9 @@ function Review() {
     <div className="page-wrap py-6">
       {isCalibrating && (
         <CalibrationBanner
-          calibrationN={calibrationN}
+          calibrationN={
+            calibrationN
+          }
         />
       )}
 
@@ -365,12 +333,11 @@ function Review() {
           <AdaptationBanner
             reason={adaptReason}
             onKeep={() => {
-              /**
-               * Keep the existing queue.
-               * This is the "decline" path and is sticky.
-               */
-              dismissedRef.current = true
+              dismissedRef.current =
+                true
+
               setAdaptReason(null)
+
               pendingAdaptRef.current =
                 null
 
@@ -385,7 +352,10 @@ function Review() {
                   const completedIds =
                     new Set(
                       prev
-                        .slice(0, idx)
+                        .slice(
+                          0,
+                          idx,
+                        )
                         .map(
                           (card) =>
                             card.id,
@@ -410,11 +380,8 @@ function Review() {
                 })
               }
 
-              /**
-               * Accepting an adaptation is not a dismissal.
-               * Do not mark it as a dismissal metric.
-               */
               setAdaptReason(null)
+
               pendingAdaptRef.current =
                 null
             }}
@@ -449,12 +416,14 @@ function Review() {
           </h2>
 
           <p className="text-sm text-(--ink-soft) mt-2">
-            A short pause is available if
-            it feels useful. You decide when
+            A short pause is
+            available if it feels
+            useful. You decide when
             to return.
           </p>
 
           <button
+            type="button"
             className="btn-primary mt-6"
             onClick={() =>
               setIsBreak(false)
@@ -485,9 +454,10 @@ function Review() {
 
           <div className="mt-6 flex items-center gap-2 text-xs text-(--ink-faint)">
             <span className="h-2 w-2 rounded-full bg-(--line-strong)" />
-            Type in the answer field to
-            let rhythm sensing work — or
-            just grade without typing.
+            Type in the answer field
+            to let rhythm sensing work
+            — or just grade without
+            typing.
           </div>
 
           <input
@@ -525,7 +495,8 @@ function Review() {
             </span>
 
             <span className="hidden sm:inline">
-              Timing only, never content
+              Timing only, never
+              content
             </span>
           </div>
         </div>
@@ -571,6 +542,9 @@ function ReviewHeader({
   isBreak,
   onToggleBreak,
 }: ReviewHeaderProps) {
+  const overdueDays =
+    daysOverdue(dueDate)
+
   return (
     <div className="flex items-center justify-between">
       <div className="text-sm text-(--ink-faint)">
@@ -579,9 +553,9 @@ function ReviewHeader({
         </span>{' '}
         · {topic} · due {dueDate}{' '}
 
-        {daysOverdue(dueDate) ? (
+        {overdueDays > 0 ? (
           <span className="text-amber-700">
-            · {daysOverdue(dueDate)}d overdue
+            · {overdueDays}d overdue
           </span>
         ) : null}
       </div>
@@ -606,7 +580,9 @@ function ReviewHeader({
             <button
               type="button"
               className="inline-flex items-center gap-1.5 rounded-full bg-(--ink) text-white px-3 py-1.5 text-xs font-medium"
-              onClick={onToggleBreak}
+              onClick={
+                onToggleBreak
+              }
             >
               <Pause size={12} />
 

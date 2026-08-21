@@ -28,12 +28,6 @@ export type SessionSummary = {
   averageGrade: number
 }
 
-/**
- * Session-level duration/performance data.
- *
- * Every value is derived from persisted ReviewSession records.
- * No synthetic observations are generated here.
- */
 export type SessionLengthPerf = {
   sessionId: string
   durationMinutes: number
@@ -52,10 +46,6 @@ export type ActionablePattern = {
 function isSuccessfulRecall(
   session: ReviewSession,
 ): boolean {
-  /**
-   * Circadia's grade scale is 0–3.
-   * Grades 2 and 3 represent successful recall.
-   */
   return session.grade >= 2
 }
 
@@ -63,13 +53,12 @@ export function retentionByTopic(
   cards: Card[],
   sessions: ReviewSession[],
 ): RetentionByTopic[] {
-  const topicByCardId =
-    new Map(
-      cards.map(
-        (card) =>
-          [card.id, card.topic] as const,
-      ),
-    )
+  const topicByCardId = new Map(
+    cards.map((card) => [
+      card.id,
+      card.topic,
+    ]),
+  )
 
   const groups = new Map<
     string,
@@ -81,9 +70,8 @@ export function retentionByTopic(
 
   for (const session of sessions) {
     const topic =
-      topicByCardId.get(
-        session.cardId,
-      ) ?? 'General'
+      topicByCardId.get(session.cardId) ??
+      'General'
 
     const group =
       groups.get(topic) ?? {
@@ -93,33 +81,23 @@ export function retentionByTopic(
 
     group.total += 1
 
-    if (
-      isSuccessfulRecall(
-        session,
-      )
-    ) {
+    if (isSuccessfulRecall(session)) {
       group.correct += 1
     }
 
-    groups.set(
-      topic,
-      group,
-    )
+    groups.set(topic, group)
   }
 
   return [...groups.entries()]
-    .map(
-      ([topic, group]) => ({
-        topic,
-        total: group.total,
-        correct: group.correct,
-        rate:
-          group.total > 0
-            ? group.correct /
-              group.total
-            : 0,
-      }),
-    )
+    .map(([topic, group]) => ({
+      topic,
+      total: group.total,
+      correct: group.correct,
+      rate:
+        group.total > 0
+          ? group.correct / group.total
+          : 0,
+    }))
     .sort(
       (a, b) =>
         b.total - a.total ||
@@ -130,9 +108,7 @@ export function retentionByTopic(
 function retentionRate(
   sessions: ReviewSession[],
 ): number | null {
-  if (
-    sessions.length === 0
-  ) {
+  if (sessions.length === 0) {
     return null
   }
 
@@ -141,19 +117,9 @@ function retentionRate(
       isSuccessfulRecall,
     ).length
 
-  return (
-    successful /
-    sessions.length
-  )
+  return successful / sessions.length
 }
 
-/**
- * Compare the latest period against the immediately
- * preceding period of equal length.
- *
- * No comparison is returned unless BOTH periods contain
- * actual reviews.
- */
 export function retentionPeriodComparison(
   sessions: ReviewSession[],
   periodDays = 7,
@@ -166,59 +132,43 @@ export function retentionPeriodComparison(
     60 *
     1000
 
-  const nowMs =
-    now.getTime()
-
+  const nowMs = now.getTime()
   const currentStart =
     nowMs - periodMs
-
   const previousStart =
-    currentStart -
-    periodMs
+    currentStart - periodMs
 
   const currentSessions =
-    sessions.filter(
-      (session) => {
-        const timestamp =
-          new Date(
-            session.timestamp,
-          ).getTime()
+    sessions.filter((session) => {
+      const timestamp =
+        new Date(
+          session.timestamp,
+        ).getTime()
 
-        return (
-          timestamp >=
-            currentStart &&
-          timestamp <=
-            nowMs
-        )
-      },
-    )
+      return (
+        timestamp >= currentStart &&
+        timestamp <= nowMs
+      )
+    })
 
   const previousSessions =
-    sessions.filter(
-      (session) => {
-        const timestamp =
-          new Date(
-            session.timestamp,
-          ).getTime()
+    sessions.filter((session) => {
+      const timestamp =
+        new Date(
+          session.timestamp,
+        ).getTime()
 
-        return (
-          timestamp >=
-            previousStart &&
-          timestamp <
-            currentStart
-        )
-      },
-    )
+      return (
+        timestamp >= previousStart &&
+        timestamp < currentStart
+      )
+    })
 
   const current =
-    retentionRate(
-      currentSessions,
-    )
+    retentionRate(currentSessions)
 
   const previous =
-    retentionRate(
-      previousSessions,
-    )
+    retentionRate(previousSessions)
 
   return {
     current,
@@ -235,30 +185,17 @@ export function retentionPeriodComparison(
   }
 }
 
-/**
- * Convert card-level review records into session-level summaries.
- *
- * A session's duration is taken from persisted durationMs
- * when available. Otherwise, it is derived from the actual
- * timestamps of the first and last review in that session.
- */
 export function sessionSummaries(
   reviews: ReviewSession[],
 ): SessionSummary[] {
   const grouped =
-    new Map<
-      string,
-      ReviewSession[]
-    >()
+    new Map<string, ReviewSession[]>()
 
   for (const review of reviews) {
     const group =
-      grouped.get(
-        review.sessionId,
-      ) ?? []
+      grouped.get(review.sessionId) ?? []
 
     group.push(review)
-
     grouped.set(
       review.sessionId,
       group,
@@ -266,43 +203,32 @@ export function sessionSummaries(
   }
 
   return [...grouped.entries()]
-    .map(
-      ([
-        sessionId,
-        sessionReviews,
-      ]) => {
-        const sorted =
-          [...sessionReviews].sort(
-            (a, b) =>
-              new Date(
-                a.timestamp,
-              ).getTime() -
-              new Date(
-                b.timestamp,
-              ).getTime(),
-          )
+    .flatMap(
+      ([sessionId, sessionReviews]) => {
+        const sorted = [
+          ...sessionReviews,
+        ].sort(
+          (a, b) =>
+            new Date(
+              a.timestamp,
+            ).getTime() -
+            new Date(
+              b.timestamp,
+            ).getTime(),
+        )
 
-        const first =
-          sorted[0]
+        const first = sorted.at(0)
+        const last = sorted.at(-1)
 
-        const last =
-          sorted[
-            sorted.length - 1
-          ]
-
-        if (
-          !first ||
-          !last
-        ) {
-          return null
+        if (!first || !last) {
+          return []
         }
 
         const persistedDuration =
           Math.max(
             ...sorted.map(
               (review) =>
-                review.durationMs ??
-                0,
+                review.durationMs ?? 0,
             ),
           )
 
@@ -315,8 +241,7 @@ export function sessionSummaries(
           ).getTime()
 
         const durationMs =
-          persistedDuration >
-          0
+          persistedDuration > 0
             ? persistedDuration
             : Math.max(
                 0,
@@ -328,39 +253,25 @@ export function sessionSummaries(
             isSuccessfulRecall,
           ).length
 
-        return {
-          sessionId,
-          startedAt:
-            first.timestamp,
-          endedAt:
-            last.timestamp,
-          durationMinutes:
-            durationMs /
-            60000,
-          reviewCount:
-            sorted.length,
-          recallRate:
-            successful /
-            sorted.length,
-          averageGrade:
-            sorted.reduce(
-              (
-                sum,
-                review,
-              ) =>
-                sum +
-                review.grade,
-              0,
-            ) /
-            sorted.length,
-        }
+        return [
+          {
+            sessionId,
+            startedAt: first.timestamp,
+            endedAt: last.timestamp,
+            durationMinutes:
+              durationMs / 60000,
+            reviewCount: sorted.length,
+            recallRate:
+              successful / sorted.length,
+            averageGrade:
+              sorted.reduce(
+                (sum, review) =>
+                  sum + review.grade,
+                0,
+              ) / sorted.length,
+          },
+        ]
       },
-    )
-    .filter(
-      (
-        summary,
-      ): summary is SessionSummary =>
-        summary !== null,
     )
     .sort(
       (a, b) =>
@@ -373,99 +284,60 @@ export function sessionSummaries(
     )
 }
 
-/**
- * Return actual session duration/performance observations.
- *
- * This intentionally does NOT manufacture a trend,
- * regression line, buckets, or minimum sample set.
- *
- * Every returned observation corresponds to a real
- * persisted review session.
- */
 export function sessionLengthVsPerf(
   sessions: ReviewSession[],
 ): SessionLengthPerf[] {
-  return sessionSummaries(
-    sessions,
-  ).map(
+  return sessionSummaries(sessions).map(
     (session) => ({
-      sessionId:
-        session.sessionId,
+      sessionId: session.sessionId,
       durationMinutes:
         session.durationMinutes,
-      reviewCount:
-        session.reviewCount,
-      recallRate:
-        session.recallRate,
+      reviewCount: session.reviewCount,
+      recallRate: session.recallRate,
       averageGrade:
         session.averageGrade,
-      startedAt:
-        session.startedAt,
+      startedAt: session.startedAt,
     }),
   )
 }
 
-/**
- * Produce one conservative actionable insight.
- *
- * Requirements:
- * - At least 10 review observations.
- * - At least two topics with 5 observations each.
- * - At least a 15 percentage-point difference.
- *
- * If those conditions aren't satisfied, return null.
- */
 export function actionablePattern(
   sessions: ReviewSession[],
   cards: Card[],
 ): ActionablePattern {
-  if (
-    sessions.length < 10
-  ) {
+  if (sessions.length < 10) {
     return null
   }
 
-  const topics =
-    retentionByTopic(
-      cards,
-      sessions,
-    ).filter(
-      (topic) =>
-        topic.total >= 5,
-    )
+  const topics = retentionByTopic(
+    cards,
+    sessions,
+  ).filter(
+    (topic) => topic.total >= 5,
+  )
 
-  if (
-    topics.length < 2
-  ) {
+  if (topics.length < 2) {
     return null
   }
 
-  const strongest =
-    [...topics].sort(
-      (a, b) =>
-        b.rate - a.rate,
-    )[0]
+  const strongest = topics.reduce(
+    (best, topic) =>
+      topic.rate > best.rate
+        ? topic
+        : best,
+  )
 
-  const weakest =
-    [...topics].sort(
-      (a, b) =>
-        a.rate - b.rate,
-    )[0]
-
-  if (
-    !strongest ||
-    !weakest
-  ) {
-    return null
-  }
+  const weakest = topics.reduce(
+    (worst, topic) =>
+      topic.rate < worst.rate
+        ? topic
+        : worst,
+  )
 
   const difference =
-    strongest.rate -
-    weakest.rate
+    strongest.rate - weakest.rate
 
-  if (
-    difference < 0.15
-  ) {
+  if (difference < 0.15) {
     return null
   }
 

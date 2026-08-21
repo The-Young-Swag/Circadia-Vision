@@ -64,18 +64,14 @@ export function useDashboardData() {
 
         await refresh()
 
-        if (!cancelled) {
-          setReady(true)
-        }
+        setReady(true)
       } catch (error) {
         console.error(
           'Failed to initialize dashboard data:',
           error,
         )
 
-        if (!cancelled) {
-          setReady(true)
-        }
+        setReady(true)
       }
     }
 
