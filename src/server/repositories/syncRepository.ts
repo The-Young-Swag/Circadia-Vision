@@ -1,4 +1,4 @@
-import { db } from '../db/client.js'
+import { db } from '../infrastructure/database/client.js'
 
 // Repository owns persistence (Guide §25) — SQL never in controllers/services
 // If we migrate node:sqlite → Postgres, only this file changes.

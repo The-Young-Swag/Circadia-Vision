@@ -8,14 +8,14 @@ import { SyncPushSchema, SyncPullSchema } from './schemas'
 // Example: health check via Server Function (could also be via Express /health)
 export const getSyncHealth = createServerFn({ method: 'GET' }).handler(async () => {
   // Server-only: dynamic import keeps client bundle clean (isomorphic model Guide §5)
-  const { DB_PATH_VALUE } = await import('../../../server/db/client.js')
+  const { DB_PATH_VALUE } = await import('../../server/infrastructure/database/client.js')
   return { ok: true, db: DB_PATH_VALUE, time: new Date().toISOString() }
 })
 
 export const pushSync = createServerFn({ method: 'POST' })
   .validator(SyncPushSchema)
   .handler(async ({ data }) => {
-    const { syncService } = await import('../../../server/services/syncService.js')
+    const { syncService } = await import('../../server/services/syncService.js')
     syncService.push(data.deviceId, data.kind, data.payload)
     return { ok: true }
   })
@@ -23,7 +23,7 @@ export const pushSync = createServerFn({ method: 'POST' })
 export const pullSync = createServerFn({ method: 'GET' })
   .validator(SyncPullSchema)
   .handler(async ({ data }): Promise<any> => {
-    const { syncService } = await import('../../../server/services/syncService.js')
+    const { syncService } = await import('../../server/services/syncService.js')
     const result = syncService.pull(data.deviceId, data.kind)
     return result ?? { payload: null }
   })

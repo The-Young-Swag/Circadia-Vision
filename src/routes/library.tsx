@@ -4,10 +4,10 @@ import type { Card } from '#/db/dexie'
 import { exportToJson, exportToMarkdown } from '#/lib/import'
 import { cardRepository } from '#/repositories/cardRepository'
 import { Search, Plus, Upload, Download, Filter, X } from 'lucide-react'
-import { CardDialog } from '#/components/library/CardDialog'
-import { ImportWizard } from '#/components/library/ImportWizard'
-import { LibraryTable } from '#/components/library/LibraryTable'
-import { useLibraryData } from '#/features/library/useLibraryData'
+import { CardDialog } from '#/features/library/components/CardDialog'
+import { ImportWizard } from '#/features/library/components/ImportWizard'
+import { LibraryTable } from '#/features/library/components/LibraryTable'
+import { useLibraryData } from '#/features/library/hooks/useLibraryData'
 
 export const Route = createFileRoute('/library')({ component: Library })
 

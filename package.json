@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000 --host 0.0.0.0",
-    "dev:sync": "tsx server/index.ts",
+    "dev:sync": "tsx src/server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:sync\"",
     "generate-routes": "tsr generate",
     "build": "vite build",

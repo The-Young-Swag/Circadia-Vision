@@ -1,10 +1,10 @@
 import express from 'express'
 import cors from 'cors'
-import { requestLogger } from './http/middleware/requestLogger.js'
-import { errorHandler } from './http/middleware/errorHandler.js'
-import { syncRouter } from './http/routes/sync.js'
-import { kvRouter } from './http/routes/kv.js'
-import { DB_PATH_VALUE } from './db/client.js'
+import { requestLogger } from './middleware/requestLogger.js'
+import { errorHandler } from './middleware/errorHandler.js'
+import { syncRouter } from './routes/sync.js'
+import { kvRouter } from './routes/kv.js'
+import { DB_PATH_VALUE } from '../infrastructure/database/client.js'
 
 // Express 5 layered app — boring, correct (Guide §21, §27)
 // Middleware order matters: logging → security → parser → routes → error

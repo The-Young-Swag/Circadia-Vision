@@ -1,5 +1,5 @@
-import { createApp } from './app.js'
-import { DB_PATH_VALUE } from './db/client.js'
+import { createApp } from './http/app.js'
+import { DB_PATH_VALUE } from './infrastructure/database/client.js'
 
 const PORT = Number(process.env.SYNC_PORT ?? 4901)
 const app = createApp()
