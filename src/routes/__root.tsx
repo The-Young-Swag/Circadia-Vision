@@ -6,7 +6,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '../components/layout/Footer'
-import Header from '../components/layout/Header'
+import Sidebar from '../components/layout/Sidebar'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
@@ -44,9 +44,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[#f8fafc] dark:selection:bg-[#1e293b]">
-        <Header />
-        <main className="min-h-[calc(100vh-128px)]">{children}</main>
-        <Footer />
+        <div className="min-h-screen flex flex-col lg:flex-row">
+          <Sidebar />
+          <div className="flex-1 min-w-0 flex flex-col lg:pl-[280px]">
+            {/* Mobile spacer is handled inside Sidebar top bar */}
+            <main className="flex-1 min-h-[calc(100vh-64px)]">{children}</main>
+            <Footer />
+          </div>
+        </div>
         <TanStackDevtools
           config={{ position: 'bottom-right' }}
           plugins={[
