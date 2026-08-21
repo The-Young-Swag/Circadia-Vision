@@ -3,7 +3,8 @@
  * Keeps SM-2, baseline, and persistence out of components (React 19 rule 11).
  */
 import type { Card } from '#/shared/lib/db/dexie'
-import { sm2, type Grade } from '#/shared/lib/sm2'
+import { sm2  } from '#/shared/lib/sm2'
+import type {Grade} from '#/shared/lib/sm2';
 import { updateEwma, DEFAULT_ALPHA } from '#/shared/lib/baseline'
 import type { AggregatedFeatures } from '#/shared/lib/signals'
 import { cardRepository } from '#/shared/repositories/cardRepository'
@@ -20,12 +21,20 @@ type GradeResult = {
   nextDueDate: string
 }
 
-export function calculateNextReview(card: Card, grade: Grade, now: Date = new Date()): GradeResult {
+export function calculateNextReview(
+  card: Card,
+  grade: Grade,
+  now: Date = new Date(),
+): GradeResult {
   // Validate at domain boundary — Zod ensures grade is 0-3 (Guide §8, §9)
   const parsed = GradeSchema.safeParse(grade)
   if (!parsed.success) throw new Error(`Invalid grade: ${grade}`)
   const r = sm2(
-    { interval: card.interval, repetitions: card.repetitions, easeFactor: card.easeFactor },
+    {
+      interval: card.interval,
+      repetitions: card.repetitions,
+      easeFactor: card.easeFactor,
+    },
     parsed.data,
     now,
   )
@@ -74,10 +83,15 @@ export async function persistGrade(params: {
     for (const [name, value] of features) {
       const row = await baselineRepository.getByName(name)
       if (!row) continue
-      const snap = { mean: row.mean, variance: row.variance, stddev: row.stddev, sampleCount: row.sampleCount }
+      const snap = {
+        mean: row.mean,
+        variance: row.variance,
+        stddev: row.stddev,
+        sampleCount: row.sampleCount,
+      }
       const next = updateEwma(snap, value, DEFAULT_ALPHA)
       await baselineRepository.upsert({
-        name: name as never,
+        name: name,
         mean: next.mean,
         variance: next.variance,
         stddev: next.stddev,

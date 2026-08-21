@@ -1,11 +1,26 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Card } from '#/shared/lib/db/dexie'
-import { parseAny, type RawCard } from '#/shared/lib/import'
+import { parseAny  } from '#/shared/lib/import'
+import type {RawCard} from '#/shared/lib/import';
 import { cardRepository } from '#/shared/repositories/cardRepository'
-import { Upload, FileText, Sparkles, X, Plus, Trash2, Check, Info, ChevronDown } from 'lucide-react'
+import {
+  Upload,
+  FileText,
+  Sparkles,
+  X,
+  Plus,
+  Trash2,
+  Check,
+  Info,
+  ChevronDown,
+} from 'lucide-react'
 
 // Templates — plain-language examples anyone can use
-const TEMPLATES: Record<string, { label: string; hint: string; content: string }> = {
+const TEMPLATES: Record<
+  string,
+  { label: string; hint: string; content: string }
+> = {
   notes: {
     label: 'Class notes',
     hint: 'Bullets or headings — simplest',
@@ -55,16 +70,27 @@ Warfarin antidote :: Vitamin K`,
 const SUPPORTED = '.txt, .md, .json, .csv'
 
 function humanWarning(w: string): string {
-  if (w.includes('No content')) return 'Your paste area is empty — add some text or try a template above.'
-  if (w.includes('No cards detected')) return 'We couldn’t find cards yet. Try one idea per line, or use “Question :: Answer”.'
-  if (w.includes('Duplicate skipped')) return w.replace('Duplicate skipped', 'Skipped duplicate')
-  if (w.includes('Invalid JSON')) return 'That JSON doesn’t look right — check it has front and back for each card.'
-  if (w.includes('JSON parse')) return 'We couldn’t read that JSON — it might be missing a bracket or quote.'
+  if (w.includes('No content'))
+    return 'Your paste area is empty — add some text or try a template above.'
+  if (w.includes('No cards detected'))
+    return 'We couldn’t find cards yet. Try one idea per line, or use “Question :: Answer”.'
+  if (w.includes('Duplicate skipped'))
+    return w.replace('Duplicate skipped', 'Skipped duplicate')
+  if (w.includes('Invalid JSON'))
+    return 'That JSON doesn’t look right — check it has front and back for each card.'
+  if (w.includes('JSON parse'))
+    return 'We couldn’t read that JSON — it might be missing a bracket or quote.'
   if (w.includes('CSV')) return w
   return w
 }
 
-export function ImportWizard({ onClose, onImported }: { onClose: () => void; onImported: () => void }) {
+export function ImportWizard({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void
+  onImported: () => void
+}) {
   const [mode, setMode] = useState<'paste' | 'file'>('paste')
   const [text, setText] = useState('')
   const [fileName, setFileName] = useState<string | null>(null)
@@ -93,7 +119,9 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
   }, [parsed.cards, debounced])
 
   const warnings = parsed.warnings.map(humanWarning)
-  const canImport = editable.length > 0 && editable.every((c) => c.front.trim() && c.back.trim())
+  const canImport =
+    editable.length > 0 &&
+    editable.every((c) => c.front.trim() && c.back.trim())
 
   const loadFile = async (file: File) => {
     const content = await file.text()
@@ -105,12 +133,12 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    const file = e.dataTransfer.files[0]
+    const file = e.dataTransfer.files.item(0)
     if (file) await loadFile(file)
   }
 
   const onFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.item(0) ?? null
     if (file) await loadFile(file)
   }
 
@@ -120,10 +148,14 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
   }
 
   const updateCard = (idx: number, patch: Partial<RawCard>) => {
-    setEditable((prev) => prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)))
+    setEditable((prev) =>
+      prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)),
+    )
   }
-  const removeCard = (idx: number) => setEditable((p) => p.filter((_, i) => i !== idx))
-  const addBlank = () => setEditable((p) => [...p, { front: '', back: '', topic: 'General' }])
+  const removeCard = (idx: number) =>
+    setEditable((p) => p.filter((_, i) => i !== idx))
+  const addBlank = () =>
+    setEditable((p) => [...p, { front: '', back: '', topic: 'General' }])
 
   const doImport = async () => {
     const today = new Date().toISOString().slice(0, 10)
@@ -169,8 +201,9 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
                 Add to your library
               </h2>
               <p className="text-sm text-[var(--ink-soft)] mt-2 leading-relaxed max-w-[60ch]">
-                Paste whatever you have — notes, lists, questions — or upload a file. We’ll turn it into study cards
-                you can tweak before saving. No special formatting needed.
+                Paste whatever you have — notes, lists, questions — or upload a
+                file. We’ll turn it into study cards you can tweak before
+                saving. No special formatting needed.
               </p>
             </div>
             <button
@@ -205,7 +238,9 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
               <>
                 {/* Templates — one-tap help for anyone */}
                 <div>
-                  <div className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-faint)]">Start with an example — tap to try</div>
+                  <div className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-faint)]">
+                    Start with an example — tap to try
+                  </div>
                   <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {Object.entries(TEMPLATES).map(([k, t]) => (
                       <button
@@ -213,8 +248,12 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
                         onClick={() => useTemplate(k)}
                         className="text-left rounded-xl border border-[var(--line)] bg-white p-3 hover:border-[var(--blue)] hover:bg-sky-50/50 transition group"
                       >
-                        <div className="text-sm font-semibold group-hover:text-[var(--blue)]">{t.label}</div>
-                        <div className="text-xs text-[var(--ink-faint)] mt-0.5">{t.hint}</div>
+                        <div className="text-sm font-semibold group-hover:text-[var(--blue)]">
+                          {t.label}
+                        </div>
+                        <div className="text-xs text-[var(--ink-faint)] mt-0.5">
+                          {t.hint}
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -222,7 +261,9 @@ export function ImportWizard({ onClose, onImported }: { onClose: () => void; onI
 
                 <label className="block">
                   <span className="text-sm font-medium">Your notes</span>
-                  <span className="text-xs text-[var(--ink-faint)] ml-2">Paste however they are — we’ll sort it</span>
+                  <span className="text-xs text-[var(--ink-faint)] ml-2">
+                    Paste however they are — we’ll sort it
+                  </span>
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -240,7 +281,8 @@ A: How plants use sunlight
 Or just one fact per line — we’ll handle the rest.`}
                   />
                   <span className="text-xs text-[var(--ink-faint)] mt-1.5 block">
-                    Tip: One idea per line works great. You can also use “Question :: Answer”.
+                    Tip: One idea per line works great. You can also use
+                    “Question :: Answer”.
                   </span>
                 </label>
 
@@ -248,22 +290,45 @@ Or just one fact per line — we’ll handle the rest.`}
                   onClick={() => setShowTips((v) => !v)}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--ink-soft)] hover:text-[var(--ink)]"
                 >
-                  <Info size={14} /> How it works <ChevronDown size={12} className={`transition ${showTips ? 'rotate-180' : ''}`} />
+                  <Info size={14} /> How it works{' '}
+                  <ChevronDown
+                    size={12}
+                    className={`transition ${showTips ? 'rotate-180' : ''}`}
+                  />
                 </button>
                 {showTips && (
                   <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-muted)] p-4 text-sm leading-relaxed text-[var(--ink-soft)]">
                     <ul className="list-disc pl-5 space-y-1">
                       <li>
-                        <strong>Headings become topics</strong> — Start a line with <code className="rounded bg-white px-1.5 py-0.5 border">## Biology</code> to group
-                        cards.
+                        <strong>Headings become topics</strong> — Start a line
+                        with{' '}
+                        <code className="rounded bg-white px-1.5 py-0.5 border">
+                          ## Biology
+                        </code>{' '}
+                        to group cards.
                       </li>
                       <li>
-                        <strong>Bullets become cards</strong> — Each <code className="rounded bg-white px-1.5 py-0.5 border">- Idea</code> is a card.
+                        <strong>Bullets become cards</strong> — Each{' '}
+                        <code className="rounded bg-white px-1.5 py-0.5 border">
+                          - Idea
+                        </code>{' '}
+                        is a card.
                       </li>
                       <li>
-                        <strong>Separators split front/back</strong> — <code className="rounded bg-white px-1.5 py-0.5 border">::</code>, <code className="rounded bg-white px-1.5 py-0.5 border">-&gt;</code> or simply write a question.
+                        <strong>Separators split front/back</strong> —{' '}
+                        <code className="rounded bg-white px-1.5 py-0.5 border">
+                          ::
+                        </code>
+                        ,{' '}
+                        <code className="rounded bg-white px-1.5 py-0.5 border">
+                          -&gt;
+                        </code>{' '}
+                        or simply write a question.
                       </li>
-                      <li>CSV and JSON files work too — just upload and we’ll read them.</li>
+                      <li>
+                        CSV and JSON files work too — just upload and we’ll read
+                        them.
+                      </li>
                     </ul>
                   </div>
                 )}
@@ -283,14 +348,30 @@ Or just one fact per line — we’ll handle the rest.`}
                   <div className="mx-auto h-10 w-10 rounded-full bg-white border border-[var(--line)] grid place-items-center">
                     <Upload size={18} />
                   </div>
-                  <div className="font-medium mt-3">Drop your file here or click to browse</div>
-                  <div className="text-sm text-[var(--ink-faint)] mt-1">Supported: {SUPPORTED} · Your data stays on this device</div>
-                  {fileName && <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white border border-[var(--line)] px-3 py-1.5 text-sm"><FileText size={14} /> {fileName}</div>}
-                  <input ref={fileInputRef} type="file" accept=".txt,.md,.markdown,.json,.csv" className="hidden" onChange={onFilePick} />
+                  <div className="font-medium mt-3">
+                    Drop your file here or click to browse
+                  </div>
+                  <div className="text-sm text-[var(--ink-faint)] mt-1">
+                    Supported: {SUPPORTED} · Your data stays on this device
+                  </div>
+                  {fileName && (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white border border-[var(--line)] px-3 py-1.5 text-sm">
+                      <FileText size={14} /> {fileName}
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".txt,.md,.markdown,.json,.csv"
+                    className="hidden"
+                    onChange={onFilePick}
+                  />
                 </div>
                 {text && (
                   <div className="rounded-xl border border-[var(--line)] bg-white p-3">
-                    <div className="text-xs font-semibold text-[var(--ink-faint)] tracking-wide uppercase">File contents — you can still edit</div>
+                    <div className="text-xs font-semibold text-[var(--ink-faint)] tracking-wide uppercase">
+                      File contents — you can still edit
+                    </div>
                     <textarea
                       value={text}
                       onChange={(e) => setText(e.target.value)}
@@ -308,12 +389,20 @@ Or just one fact per line — we’ll handle the rest.`}
                 <h3 className="font-semibold flex items-center gap-2">
                   Preview{' '}
                   <span className="rounded-full bg-[var(--surface-muted)] border border-[var(--line)] px-2.5 py-0.5 text-xs font-medium">
-                    {editable.length} card{editable.length === 1 ? '' : 's'} found
+                    {editable.length} card{editable.length === 1 ? '' : 's'}{' '}
+                    found
                   </span>
-                  {editable.length > 0 && <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 text-xs inline-flex items-center gap-1"><Check size={12} /> Ready to edit</span>}
+                  {editable.length > 0 && (
+                    <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 text-xs inline-flex items-center gap-1">
+                      <Check size={12} /> Ready to edit
+                    </span>
+                  )}
                 </h3>
                 {editable.length > 0 && (
-                  <button onClick={addBlank} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-muted)]">
+                  <button
+                    onClick={addBlank}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-muted)]"
+                  >
                     <Plus size={12} /> Add card
                   </button>
                 )}
@@ -334,15 +423,22 @@ Or just one fact per line — we’ll handle the rest.`}
                 <div className="mt-4 rounded-xl border border-dashed border-[var(--line)] bg-[var(--surface-muted)] p-8 text-center">
                   <div className="text-sm font-medium">No cards yet</div>
                   <div className="text-sm text-[var(--ink-soft)] mt-1 max-w-[40ch] mx-auto">
-                    Paste some notes above or try an example. Each card has a front (question) and a back (answer) — you’ll be able to tweak every one.
+                    Paste some notes above or try an example. Each card has a
+                    front (question) and a back (answer) — you’ll be able to
+                    tweak every one.
                   </div>
                 </div>
               ) : (
                 <div className="mt-4 grid gap-3 max-h-[360px] overflow-auto pr-1">
                   {editable.map((c, i) => (
-                    <div key={i} className="rounded-xl border border-[var(--line)] bg-white p-3 sm:p-4">
+                    <div
+                      key={i}
+                      className="rounded-xl border border-[var(--line)] bg-white p-3 sm:p-4"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-faint)]">Card {i + 1}</span>
+                        <span className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-faint)]">
+                          Card {i + 1}
+                        </span>
                         <button
                           aria-label={`Remove card ${i + 1}`}
                           onClick={() => removeCard(i)}
@@ -356,7 +452,9 @@ Or just one fact per line — we’ll handle the rest.`}
                           <span className="text-[var(--ink-faint)]">Front</span>
                           <textarea
                             value={c.front}
-                            onChange={(e) => updateCard(i, { front: e.target.value })}
+                            onChange={(e) =>
+                              updateCard(i, { front: e.target.value })
+                            }
                             rows={2}
                             className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-2.5 text-sm outline-none focus:border-[var(--blue)]"
                             placeholder="Question or prompt"
@@ -366,7 +464,9 @@ Or just one fact per line — we’ll handle the rest.`}
                           <span className="text-[var(--ink-faint)]">Back</span>
                           <textarea
                             value={c.back}
-                            onChange={(e) => updateCard(i, { back: e.target.value })}
+                            onChange={(e) =>
+                              updateCard(i, { back: e.target.value })
+                            }
                             rows={2}
                             className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-2.5 text-sm outline-none focus:border-[var(--blue)]"
                             placeholder="Answer"
@@ -376,7 +476,9 @@ Or just one fact per line — we’ll handle the rest.`}
                           <span className="text-[var(--ink-faint)]">Topic</span>
                           <input
                             value={c.topic}
-                            onChange={(e) => updateCard(i, { topic: e.target.value })}
+                            onChange={(e) =>
+                              updateCard(i, { topic: e.target.value })
+                            }
                             className="mt-1 w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 text-sm outline-none focus:border-[var(--blue)]"
                             placeholder="General"
                           />
@@ -386,7 +488,11 @@ Or just one fact per line — we’ll handle the rest.`}
                   ))}
                 </div>
               )}
-              {editable.length > 20 && <p className="text-xs text-[var(--ink-faint)] mt-2">Showing all {editable.length} cards — they’ll all be added.</p>}
+              {editable.length > 20 && (
+                <p className="text-xs text-[var(--ink-faint)] mt-2">
+                  Showing all {editable.length} cards — they’ll all be added.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -406,8 +512,16 @@ Or just one fact per line — we’ll handle the rest.`}
             >
               Clear all
             </button>
-            <button className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2" onClick={doImport} disabled={!canImport}>
-              <Check size={16} /> Add {editable.length ? `${editable.length} card${editable.length === 1 ? '' : 's'}` : 'cards'} to library
+            <button
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              onClick={doImport}
+              disabled={!canImport}
+            >
+              <Check size={16} /> Add{' '}
+              {editable.length
+                ? `${editable.length} card${editable.length === 1 ? '' : 's'}`
+                : 'cards'}{' '}
+              to library
             </button>
           </div>
         </div>

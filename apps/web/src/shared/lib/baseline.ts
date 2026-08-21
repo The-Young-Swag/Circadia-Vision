@@ -128,8 +128,8 @@ export function recommendBreakMinutes(recoveries: number[]): number {
   const mid = Math.floor(sorted.length / 2)
   const median =
     sorted.length % 2 === 0
-      ? (sorted[mid - 1]! + sorted[mid]!) / 2
-      : sorted[mid]!
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid]
   return Math.max(2, Math.min(15, Math.round(median)))
 }
 

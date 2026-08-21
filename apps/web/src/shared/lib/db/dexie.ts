@@ -1,4 +1,5 @@
-import Dexie, { type Table } from 'dexie'
+import Dexie from 'dexie'
+import type {Table} from 'dexie';
 
 // ---------------------------------------------------------------------------
 // Types — single source of truth for IndexedDB
@@ -38,10 +39,7 @@ export type BaselineFeature = {
 }
 
 export type FeatureName =
-  | 'interKeyLatency'
-  | 'dwellTime'
-  | 'correctionRate'
-  | 'wpm'
+  'interKeyLatency' | 'dwellTime' | 'correctionRate' | 'wpm'
 
 export type SessionSignal = {
   id: string

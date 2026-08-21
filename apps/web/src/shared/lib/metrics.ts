@@ -42,13 +42,14 @@ export async function trackAdaptiveOverride() {
 }
 
 export async function getMetrics() {
-  const [attempts, completions, offers, dismissals, overrides] = await Promise.all([
-    getSetting<number>(KEYS.calibrationAttempts, 0),
-    getSetting<number>(KEYS.calibrationCompletions, 0),
-    getSetting<number>(KEYS.adaptiveOffers, 0),
-    getSetting<number>(KEYS.adaptiveDismissals, 0),
-    getSetting<number>(KEYS.adaptiveOverrides, 0),
-  ])
+  const [attempts, completions, offers, dismissals, overrides] =
+    await Promise.all([
+      getSetting<number>(KEYS.calibrationAttempts, 0),
+      getSetting<number>(KEYS.calibrationCompletions, 0),
+      getSetting<number>(KEYS.adaptiveOffers, 0),
+      getSetting<number>(KEYS.adaptiveDismissals, 0),
+      getSetting<number>(KEYS.adaptiveOverrides, 0),
+    ])
   return {
     calibrationCompletionRate: attempts ? completions / attempts : null,
     adaptiveDismissRate: offers ? dismissals / offers : null,

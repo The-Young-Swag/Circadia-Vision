@@ -5,15 +5,45 @@ type GradeControlsProps = {
 export function GradeControls({ onGrade }: GradeControlsProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-6">
-      <GradeBtn label="Again" hint="Fail" color="var(--purple)" onClick={() => onGrade(0)} />
-      <GradeBtn label="Hard" hint="Struggle" color="var(--amber)" onClick={() => onGrade(1)} />
-      <GradeBtn label="Good" hint="Recall" color="var(--blue)" onClick={() => onGrade(2)} />
-      <GradeBtn label="Easy" hint="Instant" color="#0f172a" onClick={() => onGrade(3)} />
+      <GradeBtn
+        label="Again"
+        hint="Fail"
+        color="var(--purple)"
+        onClick={() => onGrade(0)}
+      />
+      <GradeBtn
+        label="Hard"
+        hint="Struggle"
+        color="var(--amber)"
+        onClick={() => onGrade(1)}
+      />
+      <GradeBtn
+        label="Good"
+        hint="Recall"
+        color="var(--blue)"
+        onClick={() => onGrade(2)}
+      />
+      <GradeBtn
+        label="Easy"
+        hint="Instant"
+        color="#0f172a"
+        onClick={() => onGrade(3)}
+      />
     </div>
   )
 }
 
-function GradeBtn({ label, hint, color, onClick }: { label: string; hint: string; color: string; onClick: () => void }) {
+function GradeBtn({
+  label,
+  hint,
+  color,
+  onClick,
+}: {
+  label: string
+  hint: string
+  color: string
+  onClick: () => void
+}) {
   return (
     <button
       onClick={onClick}

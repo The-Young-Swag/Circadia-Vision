@@ -27,12 +27,14 @@ export function aggregate(
   windowMs: number = 60_000,
 ): AggregatedFeatures | null {
   if (events.length < 5) return null
-  const now = events[events.length - 1]!.timestamp
+  const now = events[events.length - 1].timestamp
   const windowStart = now - windowMs
   const win = events.filter((e) => e.timestamp >= windowStart)
   if (win.length < 5) return null
 
-  const ikls = win.map((e) => e.interKeyLatency).filter((v) => v >= 0 && v < 5000)
+  const ikls = win
+    .map((e) => e.interKeyLatency)
+    .filter((v) => v >= 0 && v < 5000)
   const dwells = win.map((e) => e.dwellTime).filter((v) => v >= 0 && v < 1000)
   const corrections = win.filter((e) => e.isCorrection).length
 
@@ -53,7 +55,7 @@ function computeWpm(events: TimingEvent[], windowMs: number): number {
   // 5 chars = 1 word, WPM = (chars / 5) / minutes
   const chars = events.filter((e) => !e.isCorrection).length
   const minutes = windowMs / 60000
-  return (chars / 5) / minutes
+  return chars / 5 / minutes
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +105,7 @@ export function createCapture(): CaptureHandle {
       const now = e.timeStamp
       lastKeyUp = now
       if (pendingDwellStart !== null && events.length > 0) {
-        const last = events[events.length - 1]!
+        const last = events[events.length - 1]
         // only set dwell for the most recent event if not yet set
         if (last.dwellTime === 0) {
           const dwell = now - pendingDwellStart

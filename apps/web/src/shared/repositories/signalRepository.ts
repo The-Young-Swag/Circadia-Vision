@@ -1,4 +1,5 @@
-import { db, type SessionSignal } from '#/shared/lib/db/dexie'
+import { db  } from '#/shared/lib/db/dexie'
+import type {SessionSignal} from '#/shared/lib/db/dexie';
 
 export const signalRepository = {
   async add(signal: SessionSignal): Promise<void> {
@@ -10,6 +11,10 @@ export const signalRepository = {
   },
 
   async findRecent(limit = 20): Promise<SessionSignal[]> {
-    return db.sessionSignals.orderBy('timestamp').reverse().limit(limit).toArray()
+    return db.sessionSignals
+      .orderBy('timestamp')
+      .reverse()
+      .limit(limit)
+      .toArray()
   },
 }

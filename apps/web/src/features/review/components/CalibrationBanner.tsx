@@ -11,8 +11,13 @@ export function CalibrationBanner({ calibrationN }: CalibrationBannerProps) {
         <Timer size={16} />
       </span>
       <div className="text-sm">
-        <div className="font-semibold text-amber-900">Calibration — {calibrationN}/5 sessions</div>
-        <div className="text-amber-800">Reviews run on standard SM-2 while Circadia learns your normal rhythm. No adaptation yet.</div>
+        <div className="font-semibold text-amber-900">
+          Calibration — {calibrationN}/5 sessions
+        </div>
+        <div className="text-amber-800">
+          Reviews run on standard SM-2 while Circadia learns your normal rhythm.
+          No adaptation yet.
+        </div>
       </div>
     </div>
   )

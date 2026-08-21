@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { type BaselineMap, createEmptyBaseline, hasBaseline } from '#/shared/lib/baseline'
+import {
+  
+  createEmptyBaseline,
+  hasBaseline
+} from '#/shared/lib/baseline'
+import type {BaselineMap} from '#/shared/lib/baseline';
 import { baselineRepository } from '#/shared/repositories/baselineRepository'
 
 export function useBaseline() {

@@ -7,14 +7,19 @@ type SessionCompleteProps = {
   live: AggregatedFeatures | null
 }
 
-export function SessionComplete({ minutes, totalCards, live }: SessionCompleteProps) {
+export function SessionComplete({
+  minutes,
+  totalCards,
+  live,
+}: SessionCompleteProps) {
   return (
     <div className="page-wrap py-10">
       <div className="card-flat p-8 text-center max-w-[640px] mx-auto">
         <p className="kicker">Session complete</p>
         <h1 className="display text-3xl mt-2">Nice work — {minutes} minutes</h1>
         <p className="text-sm text-[var(--ink-soft)] mt-2">
-          Reviewed {totalCards} cards. Your baseline keeps updating quietly. Come back tomorrow — due cards will be waiting.
+          Reviewed {totalCards} cards. Your baseline keeps updating quietly.
+          Come back tomorrow — due cards will be waiting.
         </p>
         <div className="flex justify-center gap-2 mt-6">
           <button className="btn-primary" onClick={() => location.reload()}>

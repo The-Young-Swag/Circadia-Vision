@@ -10,7 +10,12 @@ const CardInputSchema = z.object({
 })
 
 // Thin action — validate then repository (Guide §23)
-export async function createCardAction(input: { front: string; back: string; topic?: string; targetDate?: string }) {
+export async function createCardAction(input: {
+  front: string
+  back: string
+  topic?: string
+  targetDate?: string
+}) {
   const data = CardInputSchema.parse(input)
   const now = new Date().toISOString()
   const card: Card = {

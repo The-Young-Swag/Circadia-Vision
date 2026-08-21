@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { sm2, initialState, confidenceScore, daysOverdue, isDue } from '#/shared/lib/sm2'
+import {
+  sm2,
+  initialState,
+  confidenceScore,
+  daysOverdue,
+  isDue,
+} from '#/shared/lib/sm2'
 
 describe('SM-2', () => {
   const fixedNow = new Date('2026-08-21T12:00:00.000Z')
@@ -70,8 +76,18 @@ describe('SM-2', () => {
   })
 
   it('confidenceScore favors high reps and ease, penalizes overdue', () => {
-    const a = { repetitions: 5, easeFactor: 2.6, interval: 21, dueDate: '2026-08-21' }
-    const b = { repetitions: 5, easeFactor: 2.6, interval: 21, dueDate: '2026-08-10' }
+    const a = {
+      repetitions: 5,
+      easeFactor: 2.6,
+      interval: 21,
+      dueDate: '2026-08-21',
+    }
+    const b = {
+      repetitions: 5,
+      easeFactor: 2.6,
+      interval: 21,
+      dueDate: '2026-08-10',
+    }
     expect(confidenceScore(a)).toBeGreaterThan(confidenceScore(b))
   })
 })

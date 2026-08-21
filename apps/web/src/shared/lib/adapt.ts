@@ -30,13 +30,17 @@ export function adaptQueue(
     return {
       shouldAdapt: false,
       reason: null,
-      orderedCards: [...dueCards].sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
+      orderedCards: [...dueCards].sort((a, b) =>
+        a.dueDate.localeCompare(b.dueDate),
+      ),
       breakMinutes: null,
     }
   }
 
   // Elevated: sort by confidence descending (easy first), but keep due cards only
-  const ordered = [...dueCards].sort((a, b) => confidenceScore(b) - confidenceScore(a))
+  const ordered = [...dueCards].sort(
+    (a, b) => confidenceScore(b) - confidenceScore(a),
+  )
 
   return {
     shouldAdapt: true,
@@ -55,7 +59,9 @@ export function adaptQueue(
 export function buildQueue(cards: Card[], now: Date = new Date()): Card[] {
   const today = now.toISOString().slice(0, 10)
   const due = cards.filter((c) => c.dueDate <= today)
-  const fresh = cards.filter((c) => c.repetitions === 0 && c.interval === 0 && !due.includes(c))
+  const fresh = cards.filter(
+    (c) => c.repetitions === 0 && c.interval === 0 && !due.includes(c),
+  )
   // simple interleaving: due first, then fresh up to 5
   return [...due, ...fresh.slice(0, 5)]
 }

@@ -15,14 +15,26 @@ export default [
       ],
     },
     rules: {
-      'boundaries/element-types': [
+      'boundaries/dependencies': [
         'error',
         {
           default: 'disallow',
-          rules: [
-            { from: 'route', allow: ['feature', 'shared'] },
-            { from: 'feature', allow: ['shared', ['feature', { feature: '${from.feature}' }]] },
-            { from: 'shared', allow: ['shared'] },
+          policies: [
+            {
+              from: { element: { type: 'route' } },
+              allow: [{ to: { element: { type: 'feature' } } }, { to: { element: { type: 'shared' } } }],
+            },
+            {
+              from: { element: { type: 'feature' } },
+              allow: [
+                { to: { element: { type: 'shared' } } },
+                { to: { element: { type: 'feature', captured: { feature: '{{from.feature}}' } } } },
+              ],
+            },
+            {
+              from: { element: { type: 'shared' } },
+              allow: [{ to: { element: { type: 'shared' } } }],
+            },
           ],
         },
       ],

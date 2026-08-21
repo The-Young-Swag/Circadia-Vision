@@ -1,4 +1,5 @@
-import { db, type Insight } from '#/shared/lib/db/dexie'
+import { db  } from '#/shared/lib/db/dexie'
+import type {Insight} from '#/shared/lib/db/dexie';
 
 export const insightRepository = {
   async findAll(): Promise<Insight[]> {

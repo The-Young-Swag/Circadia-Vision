@@ -4,7 +4,16 @@ import { aggregate, createCapture } from '#/shared/lib/signals'
 describe('signals aggregation', () => {
   it('returns null for too few events', () => {
     expect(aggregate([])).toBeNull()
-    expect(aggregate([{ interKeyLatency: 100, dwellTime: 80, isCorrection: false, timestamp: 0 }])).toBeNull()
+    expect(
+      aggregate([
+        {
+          interKeyLatency: 100,
+          dwellTime: 80,
+          isCorrection: false,
+          timestamp: 0,
+        },
+      ]),
+    ).toBeNull()
   })
 
   it('computes WPM and correction rate', () => {
@@ -33,10 +42,10 @@ describe('signals aggregation', () => {
     h.onKeyUp({ key: 'b', timeStamp: 1480 })
     const ev = h.getEvents()
     expect(ev.length).toBe(3)
-    expect(ev[1]!.isCorrection).toBe(true)
-    expect(ev[0]!.isCorrection).toBe(false)
+    expect(ev[1].isCorrection).toBe(true)
+    expect(ev[0].isCorrection).toBe(false)
     // Ensure no key string stored
     expect((ev[0] as unknown as Record<string, unknown>).key).toBeUndefined()
-    expect(ev[0]!.dwellTime).toBeGreaterThan(0)
+    expect(ev[0].dwellTime).toBeGreaterThan(0)
   })
 })

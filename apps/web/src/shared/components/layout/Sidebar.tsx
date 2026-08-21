@@ -1,5 +1,16 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { LayoutDashboard, Library, GraduationCap, LineChart, ShieldCheck, Moon, Sun, Menu, X, MoreHorizontal } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Library,
+  GraduationCap,
+  LineChart,
+  ShieldCheck,
+  Moon,
+  Sun,
+  Menu,
+  X,
+  MoreHorizontal,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 type NavItem = {
@@ -22,13 +33,18 @@ const SECONDARY: NavItem[] = [
 
 export default function Sidebar() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() =>
-    typeof window !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+    typeof window !== 'undefined' &&
+    document.documentElement.classList.contains('dark')
+      ? 'dark'
+      : 'light',
   )
   const [mobileOpen, setMobileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
 
-  const isReview = useRouterState({ select: (s) => s.location.pathname.startsWith('/review') })
+  const isReview = useRouterState({
+    select: (s) => s.location.pathname.startsWith('/review'),
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -56,7 +72,9 @@ export default function Sidebar() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--racing)] text-white">
               <span className="h-2.5 w-2.5 rounded-full bg-[var(--emerald)]" />
             </span>
-            <span className="display text-[18px] tracking-tight text-[var(--ink)]">Circadia</span>
+            <span className="display text-[18px] tracking-tight text-[var(--ink)]">
+              Circadia
+            </span>
           </Link>
           <div className="flex items-center gap-2">
             <button
@@ -98,7 +116,11 @@ export default function Sidebar() {
       {/* Mobile More sheet */}
       {moreOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          <button className="flex-1 bg-black/30" onClick={() => setMoreOpen(false)} aria-label="Close more" />
+          <button
+            className="flex-1 bg-black/30"
+            onClick={() => setMoreOpen(false)}
+            aria-label="Close more"
+          />
           <div className="bg-[var(--surface)] border-t border-[var(--line)] rounded-t-2xl p-4 space-y-2">
             {[...PRIMARY.slice(3), ...SECONDARY].map((item) => (
               <Link
@@ -125,10 +147,16 @@ export default function Sidebar() {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <button aria-label="Close navigation" className="flex-1 bg-black/40 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} />
+          <button
+            aria-label="Close navigation"
+            className="flex-1 bg-black/40 backdrop-blur-[2px]"
+            onClick={() => setMobileOpen(false)}
+          />
           <div className="w-[300px] max-w-[84vw] bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] flex flex-col shadow-2xl">
             <div className="h-[56px] flex items-center justify-between px-4 border-b border-[var(--sidebar-border)]">
-              <span className="mono-label text-[var(--ink-faint)]">NAVIGATION</span>
+              <span className="mono-label text-[var(--ink-faint)]">
+                NAVIGATION
+              </span>
               <button
                 aria-label="Close"
                 onClick={() => setMobileOpen(false)}
@@ -138,9 +166,16 @@ export default function Sidebar() {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-4">
-              <SidebarNav onNavigate={() => setMobileOpen(false)} collapsed={false} />
+              <SidebarNav
+                onNavigate={() => setMobileOpen(false)}
+                collapsed={false}
+              />
             </div>
-            <SidebarFooter theme={theme} setTheme={setTheme} collapsed={false} />
+            <SidebarFooter
+              theme={theme}
+              setTheme={setTheme}
+              collapsed={false}
+            />
           </div>
         </div>
       )}
@@ -157,8 +192,12 @@ export default function Sidebar() {
           </span>
           {!collapsed && (
             <div className="leading-none min-w-0">
-              <div className="display text-[20px] tracking-tight truncate">Circadia</div>
-              <div className="mono-label mt-1 text-[var(--ink-faint)] truncate">ADAPTIVE STUDY</div>
+              <div className="display text-[20px] tracking-tight truncate">
+                Circadia
+              </div>
+              <div className="mono-label mt-1 text-[var(--ink-faint)] truncate">
+                ADAPTIVE STUDY
+              </div>
             </div>
           )}
           <button
@@ -166,7 +205,9 @@ export default function Sidebar() {
             onClick={() => setCollapsed((v) => !v)}
             className="ml-auto h-7 w-7 hidden lg:grid place-items-center rounded-full border border-[var(--sidebar-border)] text-[var(--ink-faint)] hover:bg-[var(--sidebar-accent)]"
           >
-            <span className="mono-label text-[10px]">{collapsed ? '→' : '←'}</span>
+            <span className="mono-label text-[10px]">
+              {collapsed ? '→' : '←'}
+            </span>
           </button>
         </div>
 
@@ -174,7 +215,11 @@ export default function Sidebar() {
           <SidebarNav collapsed={collapsed} />
         </nav>
 
-        <SidebarFooter theme={theme} setTheme={setTheme} collapsed={collapsed} />
+        <SidebarFooter
+          theme={theme}
+          setTheme={setTheme}
+          collapsed={collapsed}
+        />
       </aside>
     </>
   )
@@ -186,7 +231,10 @@ function MobileTab({ item }: { item: NavItem }) {
     <Link
       to={item.to}
       className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[var(--ink-soft)]"
-      activeProps={{ className: 'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl bg-[var(--racing)] text-white' }}
+      activeProps={{
+        className:
+          'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl bg-[var(--racing)] text-white',
+      }}
     >
       <Icon size={20} />
       <span className="mono-label text-[10px]">{item.label.toUpperCase()}</span>
@@ -194,22 +242,46 @@ function MobileTab({ item }: { item: NavItem }) {
   )
 }
 
-function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
+function SidebarNav({
+  onNavigate,
+  collapsed,
+}: {
+  onNavigate?: () => void
+  collapsed?: boolean
+}) {
   return (
     <div className="space-y-6">
       <div>
-        <div className={`sidebar-kicker px-2 mb-2 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}>Study</div>
+        <div
+          className={`sidebar-kicker px-2 mb-2 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
+        >
+          Study
+        </div>
         <div className="space-y-1">
           {PRIMARY.map((item) => (
-            <NavLink key={item.to} item={item} onNavigate={onNavigate} collapsed={collapsed} />
+            <NavLink
+              key={item.to}
+              item={item}
+              onNavigate={onNavigate}
+              collapsed={collapsed}
+            />
           ))}
         </div>
       </div>
       <div>
-        <div className={`sidebar-kicker px-2 mb-2 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}>Intelligence</div>
+        <div
+          className={`sidebar-kicker px-2 mb-2 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
+        >
+          Intelligence
+        </div>
         <div className="space-y-1">
           {SECONDARY.map((item) => (
-            <NavLink key={item.to} item={item} onNavigate={onNavigate} collapsed={collapsed} />
+            <NavLink
+              key={item.to}
+              item={item}
+              onNavigate={onNavigate}
+              collapsed={collapsed}
+            />
           ))}
         </div>
       </div>
@@ -217,7 +289,15 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
   )
 }
 
-function NavLink({ item, onNavigate, collapsed }: { item: NavItem; onNavigate?: () => void; collapsed?: boolean }) {
+function NavLink({
+  item,
+  onNavigate,
+  collapsed,
+}: {
+  item: NavItem
+  onNavigate?: () => void
+  collapsed?: boolean
+}) {
   const Icon = item.icon
   return (
     <Link
@@ -228,11 +308,18 @@ function NavLink({ item, onNavigate, collapsed }: { item: NavItem; onNavigate?: 
       title={collapsed ? item.label : undefined}
     >
       <span className="h-8 w-8 grid place-items-center rounded-lg bg-[var(--surface-muted)] border border-[var(--line)] group-[.is-active]:bg-white/15 group-[.is-active]:border-white/20 transition-colors shrink-0">
-        <Icon size={16} className="text-[var(--ink-soft)] group-[.is-active]:text-white" />
+        <Icon
+          size={16}
+          className="text-[var(--ink-soft)] group-[.is-active]:text-white"
+        />
       </span>
-      <span className={`flex-1 leading-none min-w-0 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}>
+      <span
+        className={`flex-1 leading-none min-w-0 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
+      >
         <span className="block text-[14px] truncate">{item.label}</span>
-        <span className="mono-label text-[10px] leading-none opacity-60 group-[.is-active]:opacity-80 truncate">{item.meta}</span>
+        <span className="mono-label text-[10px] leading-none opacity-60 group-[.is-active]:opacity-80 truncate">
+          {item.meta}
+        </span>
       </span>
     </Link>
   )
@@ -250,8 +337,13 @@ function SidebarFooter({
   return (
     <>
       {/* Collapsed — icon only, hover reveals full */}
-      <div className={`border-t border-[var(--sidebar-border)] p-2 flex flex-col items-center gap-2 ${collapsed ? 'flex group-hover/sidebar:hidden' : 'hidden'}`}>
-        <span className="h-2 w-2 rounded-full bg-[var(--emerald)] animate-pulse" title="Personal signal active" />
+      <div
+        className={`border-t border-[var(--sidebar-border)] p-2 flex flex-col items-center gap-2 ${collapsed ? 'flex group-hover/sidebar:hidden' : 'hidden'}`}
+      >
+        <span
+          className="h-2 w-2 rounded-full bg-[var(--emerald)] animate-pulse"
+          title="Personal signal active"
+        />
         <button
           aria-label="Toggle theme"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -260,13 +352,21 @@ function SidebarFooter({
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
       </div>
-      <div className={`border-t border-[var(--sidebar-border)] p-4 space-y-3 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}>
+      <div
+        className={`border-t border-[var(--sidebar-border)] p-4 space-y-3 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
+      >
         <div className="rounded-xl bg-[var(--surface-muted)] border border-[var(--line)] p-3">
           <div className="mono-label">Personal signal</div>
           <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[var(--ink-faint)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--emerald)] animate-pulse" aria-hidden /> Personal signal active
+            <span
+              className="h-2 w-2 rounded-full bg-[var(--emerald)] animate-pulse"
+              aria-hidden
+            />{' '}
+            Personal signal active
           </div>
-          <div className="mono-label mt-1 opacity-70">On this device • Never key content</div>
+          <div className="mono-label mt-1 opacity-70">
+            On this device • Never key content
+          </div>
         </div>
         <button
           aria-label="Toggle theme"
@@ -274,11 +374,16 @@ function SidebarFooter({
           className="w-full flex items-center justify-between rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]"
         >
           <span className="flex items-center gap-2">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}{' '}
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
           </span>
-          <span className="mono-label text-[10px] px-2 py-1 rounded-full bg-[var(--racing)] text-white">{theme === 'dark' ? 'DARK' : 'LIGHT'}</span>
+          <span className="mono-label text-[10px] px-2 py-1 rounded-full bg-[var(--racing)] text-white">
+            {theme === 'dark' ? 'DARK' : 'LIGHT'}
+          </span>
         </button>
-        <div className="mono-label text-center opacity-60">© 2026 Circadia • Veridian/Emerald/BRG</div>
+        <div className="mono-label text-center opacity-60">
+          © 2026 Circadia • Veridian/Emerald/BRG
+        </div>
       </div>
     </>
   )

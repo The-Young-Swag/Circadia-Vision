@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { createCapture, type AggregatedFeatures } from '#/shared/lib/signals'
+import { createCapture  } from '#/shared/lib/signals'
+import type {AggregatedFeatures} from '#/shared/lib/signals';
 
 // Reusable React behavior — encapsulates timing capture (external system)
 // Pure: handle is created once via lazy state initializer, never during render assignment

@@ -8,6 +8,8 @@ export default defineConfig({
   schema: './src/db/schema.ts',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgresql://user:pass@localhost:5432/circadia',
+    url:
+      process.env.DATABASE_URL ??
+      'postgresql://user:pass@localhost:5432/circadia',
   },
 })

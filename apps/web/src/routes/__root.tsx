@@ -26,7 +26,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: 'Circadia — Adaptive Study' },
-      { name: 'description', content: 'Offline-first adaptive spaced-repetition that senses rhythm, adapts review, surfaces insight. On-device, timing-only.' },
+      {
+        name: 'description',
+        content:
+          'Offline-first adaptive spaced-repetition that senses rhythm, adapts review, surfaces insight. On-device, timing-only.',
+      },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
@@ -54,7 +58,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <TanStackDevtools
           config={{ position: 'bottom-right' }}
           plugins={[
-            { name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> },
+            {
+              name: 'Tanstack Router',
+              render: <TanStackRouterDevtoolsPanel />,
+            },
             TanStackQueryDevtools,
           ]}
         />

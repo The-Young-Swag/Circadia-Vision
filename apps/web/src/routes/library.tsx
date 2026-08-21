@@ -19,7 +19,10 @@ function Library() {
   const [showImport, setShowImport] = useState(false)
   const [editing, setEditing] = useState<Card | null>(null)
 
-  const topics = useMemo(() => ['All', ...Array.from(new Set(cards.map((c) => c.topic))).sort()], [cards])
+  const topics = useMemo(
+    () => ['All', ...Array.from(new Set(cards.map((c) => c.topic))).sort()],
+    [cards],
+  )
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -40,13 +43,21 @@ function Library() {
         <div>
           <p className="kicker">Library</p>
           <h1 className="display text-[28px]">Cards & topics</h1>
-          <p className="text-sm text-[var(--ink-soft)] mt-1">Search, filter, add, edit, delete. Changes persist locally.</p>
+          <p className="text-sm text-[var(--ink-soft)] mt-1">
+            Search, filter, add, edit, delete. Changes persist locally.
+          </p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-ghost inline-flex items-center gap-2" onClick={() => setShowImport(true)}>
+          <button
+            className="btn-ghost inline-flex items-center gap-2"
+            onClick={() => setShowImport(true)}
+          >
             <Upload size={16} /> Add cards
           </button>
-          <button className="btn-primary inline-flex items-center gap-2" onClick={() => setShowAdd(true)}>
+          <button
+            className="btn-primary inline-flex items-center gap-2"
+            onClick={() => setShowAdd(true)}
+          >
             <Plus size={16} /> New card
           </button>
         </div>
@@ -62,7 +73,10 @@ function Library() {
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-[var(--ink-faint)]"
           />
           {q && (
-            <button onClick={() => setQ('')} className="text-[var(--ink-faint)]">
+            <button
+              onClick={() => setQ('')}
+              className="text-[var(--ink-faint)]"
+            >
               <X size={14} />
             </button>
           )}
@@ -85,7 +99,13 @@ function Library() {
           <button
             className="btn-ghost text-xs"
             onClick={() => {
-              const data = exportToJson(cards.map((c) => ({ front: c.front, back: c.back, topic: c.topic })))
+              const data = exportToJson(
+                cards.map((c) => ({
+                  front: c.front,
+                  back: c.back,
+                  topic: c.topic,
+                })),
+              )
               download('circadia-cards.json', data)
             }}
           >
@@ -94,7 +114,13 @@ function Library() {
           <button
             className="btn-ghost text-xs"
             onClick={() => {
-              const data = exportToMarkdown(cards.map((c) => ({ front: c.front, back: c.back, topic: c.topic })))
+              const data = exportToMarkdown(
+                cards.map((c) => ({
+                  front: c.front,
+                  back: c.back,
+                  topic: c.topic,
+                })),
+              )
               download('circadia-cards.md', data)
             }}
           >
@@ -114,11 +140,30 @@ function Library() {
         />
       </div>
 
-      <p className="text-xs text-[var(--ink-faint)] mt-3">Showing {filtered.length} of {cards.length} cards · No pagination, all local.</p>
+      <p className="text-xs text-[var(--ink-faint)] mt-3">
+        Showing {filtered.length} of {cards.length} cards · No pagination, all
+        local.
+      </p>
 
-      {showAdd && <CardDialog onClose={() => setShowAdd(false)} onSaved={refresh} />}
-      {editing && <CardDialog card={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh() }} />}
-      {showImport && <ImportWizard onClose={() => setShowImport(false)} onImported={refresh} />}
+      {showAdd && (
+        <CardDialog onClose={() => setShowAdd(false)} onSaved={refresh} />
+      )}
+      {editing && (
+        <CardDialog
+          card={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null)
+            refresh()
+          }}
+        />
+      )}
+      {showImport && (
+        <ImportWizard
+          onClose={() => setShowImport(false)}
+          onImported={refresh}
+        />
+      )}
     </div>
   )
 }

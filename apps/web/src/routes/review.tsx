@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Card } from '#/shared/lib/db/dexie'
@@ -5,7 +6,8 @@ import { seedIfEmpty } from '#/shared/lib/db/seed'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
 import { signalRepository } from '#/shared/repositories/signalRepository'
-import { type Grade, daysOverdue } from '#/shared/lib/sm2'
+import {  daysOverdue } from '#/shared/lib/sm2'
+import type {Grade} from '#/shared/lib/sm2';
 import { adaptQueue, buildQueue } from '#/shared/lib/adapt'
 import { useSignalCapture } from '#/features/review/hooks/useSignalCapture'
 import { useBaseline } from '#/shared/hooks/useBaseline'
@@ -17,7 +19,11 @@ import { AdaptationBanner } from '#/features/review/components/AdaptationBanner'
 import { QuestionView } from '#/features/review/components/QuestionView'
 import { GradeControls } from '#/features/review/components/GradeControls'
 import { SessionComplete } from '#/features/review/components/SessionComplete'
-import { bumpCalibration, maybeCreateSessionInsight, persistGrade } from '#/features/review/reviewService'
+import {
+  bumpCalibration,
+  maybeCreateSessionInsight,
+  persistGrade,
+} from '#/features/review/reviewService'
 import { trackAdaptiveDismiss, trackAdaptiveOffer } from '#/shared/lib/metrics'
 
 export const Route = createFileRoute('/review')({ component: Review })
@@ -34,10 +40,16 @@ function Review() {
   const [calibrationN, setCalibrationN] = useState(0)
   const [optIn, setOptIn] = useState<boolean>(false)
   const dismissedRef = useRef(false) // sticky for session — §2.3 reactance
-  const pendingAdaptRef = useRef<{ reason: string; rec: number; adapted: ReturnType<typeof adaptQueue> } | null>(null)
+  const pendingAdaptRef = useRef<{
+    reason: string
+    rec: number
+    adapted: ReturnType<typeof adaptQueue>
+  } | null>(null)
 
   // Constants for session — refs, not state (never changes, not rendered from state)
-  const sessionIdRef = useRef(`sess-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`)
+  const sessionIdRef = useRef(
+    `sess-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  )
   const startedAtRef = useRef(Date.now())
   const minutesRef = useRef<AggregatedFeatures[]>([])
   const recoverySamples = useRef<number[]>([4, 6, 5])
@@ -138,12 +150,18 @@ function Review() {
   )
 
   if (!cards.length) {
-    return <div className="page-wrap py-16 text-sm text-[var(--ink-faint)]">Loading cards…</div>
+    return (
+      <div className="page-wrap py-16 text-sm text-[var(--ink-faint)]">
+        Loading cards…
+      </div>
+    )
   }
 
   if (!current) {
     const mins = Math.round((Date.now() - startedAtRef.current) / 60000)
-    return <SessionComplete minutes={mins} totalCards={queue.length} live={live} />
+    return (
+      <SessionComplete minutes={mins} totalCards={queue.length} live={live} />
+    )
   }
 
   return (
@@ -162,7 +180,9 @@ function Review() {
             const pending = pendingAdaptRef.current
             if (pending) {
               setQueue((prev) => {
-                const remaining = pending.adapted.orderedCards.filter((c) => !prev.slice(0, idx).some((q) => q.id === c.id))
+                const remaining = pending.adapted.orderedCards.filter(
+                  (c) => !prev.slice(0, idx).some((q) => q.id === c.id),
+                )
                 return [...prev.slice(0, idx), ...remaining]
               })
             }
@@ -188,8 +208,13 @@ function Review() {
       {isBreak ? (
         <div className="card-flat p-10 mt-4 text-center">
           <h2 className="display text-2xl">Take {breakRec} minutes</h2>
-          <p className="text-sm text-[var(--ink-soft)] mt-2">Length learned from your own recovery time — not a generic timer.</p>
-          <button className="btn-primary mt-6" onClick={() => setIsBreak(false)}>
+          <p className="text-sm text-[var(--ink-soft)] mt-2">
+            Length learned from your own recovery time — not a generic timer.
+          </p>
+          <button
+            className="btn-primary mt-6"
+            onClick={() => setIsBreak(false)}
+          >
             Back to review
           </button>
         </div>
@@ -206,7 +231,9 @@ function Review() {
           {showBack && <GradeControls onGrade={handleGrade} />}
 
           <div className="mt-6 flex items-center gap-2 text-xs text-[var(--ink-faint)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--line-strong)]" /> Type in the answer field to let rhythm sensing work — or just grade without typing.
+            <span className="h-2 w-2 rounded-full bg-[var(--line-strong)]" />{' '}
+            Type in the answer field to let rhythm sensing work — or just grade
+            without typing.
           </div>
 
           <input
@@ -218,9 +245,21 @@ function Review() {
             spellCheck={false}
           />
           {/* Ambient state indicator — dot + one word, per §2.5 (not live numbers) */}
-          <div className="mt-3 flex items-center gap-2 text-xs font-mono text-[var(--ink-faint)]" aria-live="polite">
-            <span className={`h-2 w-2 rounded-full ${captureEnabled ? 'bg-[var(--emerald)] animate-pulse' : 'bg-slate-300'}`} aria-hidden />
-            <span>{captureEnabled ? (live ? 'Personal signal active' : 'Listening…') : 'Standard scheduling — adaptive off or calibrating'}</span>
+          <div
+            className="mt-3 flex items-center gap-2 text-xs font-mono text-[var(--ink-faint)]"
+            aria-live="polite"
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${captureEnabled ? 'bg-[var(--emerald)] animate-pulse' : 'bg-slate-300'}`}
+              aria-hidden
+            />
+            <span>
+              {captureEnabled
+                ? live
+                  ? 'Personal signal active'
+                  : 'Listening…'
+                : 'Standard scheduling — adaptive off or calibrating'}
+            </span>
             <span className="hidden sm:inline">•</span>
             <span className="hidden sm:inline">Timing only, never content</span>
           </div>
@@ -250,12 +289,26 @@ type ReviewHeaderProps = {
   onToggleBreak: () => void
 }
 
-function ReviewHeader({ progress, topic, dueDate, captureEnabled, breakRec, isCalibrating, isBreak, onToggleBreak }: ReviewHeaderProps) {
+function ReviewHeader({
+  progress,
+  topic,
+  dueDate,
+  captureEnabled,
+  breakRec,
+  isCalibrating,
+  isBreak,
+  onToggleBreak,
+}: ReviewHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="text-sm text-[var(--ink-faint)]">
-        <span className="font-medium text-[var(--ink)]">{progress}</span> · {topic} · due {dueDate}{' '}
-        {daysOverdue(dueDate) ? <span className="text-amber-700">· {daysOverdue(dueDate)}d overdue</span> : null}
+        <span className="font-medium text-[var(--ink)]">{progress}</span> ·{' '}
+        {topic} · due {dueDate}{' '}
+        {daysOverdue(dueDate) ? (
+          <span className="text-amber-700">
+            · {daysOverdue(dueDate)}d overdue
+          </span>
+        ) : null}
       </div>
       <div className="flex items-center gap-2">
         <span

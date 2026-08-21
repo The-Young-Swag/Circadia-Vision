@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useState } from 'react'
 import type { Card, ReviewSession } from '#/shared/lib/db/dexie'
 import { seedIfEmpty } from '#/shared/lib/db/seed'
@@ -21,7 +22,10 @@ export function useDashboardData() {
     })
 
     async function refresh() {
-      const [c, s] = await Promise.all([cardRepository.findAll(), sessionRepository.findAll()])
+      const [c, s] = await Promise.all([
+        cardRepository.findAll(),
+        sessionRepository.findAll(),
+      ])
       if (cancelled) return
       setCards(c)
       setSessions(s)

@@ -59,8 +59,7 @@ export function sm2(
   }
 
   // Update ease factor (even on failure, SM-2 updates)
-  easeFactor =
-    easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+  easeFactor = easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
   if (easeFactor < MIN_EASE) easeFactor = MIN_EASE
 
   // Due date = today + interval days
@@ -79,7 +78,10 @@ export function isDue(cardDueDate: string, today: Date = new Date()): boolean {
   return toISODate(today) >= cardDueDate
 }
 
-export function daysOverdue(cardDueDate: string, today: Date = new Date()): number {
+export function daysOverdue(
+  cardDueDate: string,
+  today: Date = new Date(),
+): number {
   const due = new Date(cardDueDate + 'T00:00:00')
   const t = new Date(toISODate(today) + 'T00:00:00')
   const diff = (t.getTime() - due.getTime()) / (1000 * 60 * 60 * 24)

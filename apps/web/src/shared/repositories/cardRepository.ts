@@ -1,4 +1,5 @@
-import { db, type Card } from '#/shared/lib/db/dexie'
+import { db  } from '#/shared/lib/db/dexie'
+import type {Card} from '#/shared/lib/db/dexie';
 
 // Repository owns persistence — Drizzle/Dexie never leaks to UI directly (Guide §25)
 // UI → Service → Repository → Dexie → IndexedDB

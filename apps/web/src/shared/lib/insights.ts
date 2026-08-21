@@ -5,7 +5,12 @@
 
 import type { Card, ReviewSession } from '#/shared/lib/db/dexie'
 
-export type RetentionByTopic = { topic: string; total: number; correct: number; rate: number }
+export type RetentionByTopic = {
+  topic: string
+  total: number
+  correct: number
+  rate: number
+}
 
 export function retentionByTopic(
   cards: Card[],
@@ -32,7 +37,11 @@ export function retentionByTopic(
     .sort((a, b) => b.rate - a.rate)
 }
 
-export type SessionLengthPerf = { bucket: string; avgGrade: number; count: number }
+export type SessionLengthPerf = {
+  bucket: string
+  avgGrade: number
+  count: number
+}
 
 /**
  * Buckets session length (minutes) vs avg grade.
@@ -49,7 +58,10 @@ export function sessionLengthVsPerf(
     bySession.set(s.sessionId, arr)
   }
 
-  const buckets: Record<string, { sum: number; count: number; sessions: number }> = {
+  const buckets: Record<
+    string,
+    { sum: number; count: number; sessions: number }
+  > = {
     '0–10m': { sum: 0, count: 0, sessions: 0 },
     '10–20m': { sum: 0, count: 0, sessions: 0 },
     '20–30m': { sum: 0, count: 0, sessions: 0 },
@@ -59,8 +71,10 @@ export function sessionLengthVsPerf(
 
   for (const [, list] of bySession) {
     if (list.length < 2) continue
-    const times = list.map((x) => new Date(x.timestamp).getTime()).sort((a, b) => a - b)
-    const durMin = (times[times.length - 1]! - times[0]!) / 60000
+    const times = list
+      .map((x) => new Date(x.timestamp).getTime())
+      .sort((a, b) => a - b)
+    const durMin = (times[times.length - 1] - times[0]) / 60000
     const avg = list.reduce((a, b) => a + b.grade, 0) / list.length
     const key =
       durMin < 10
@@ -72,9 +86,9 @@ export function sessionLengthVsPerf(
             : durMin < 45
               ? '30–45m'
               : '45m+'
-    buckets[key]!.sum += avg
-    buckets[key]!.count += list.length
-    buckets[key]!.sessions += 1
+    buckets[key].sum += avg
+    buckets[key].count += list.length
+    buckets[key].sessions += 1
   }
 
   return Object.entries(buckets).map(([bucket, v]) => ({
@@ -91,22 +105,31 @@ export function actionablePattern(
   cards: Card[],
 ): ActionablePattern {
   // Example: "Accuracy on new cards drops after ~30m"
-  const freshIds = new Set(cards.filter((c) => c.repetitions <= 1).map((c) => c.id))
+  const freshIds = new Set(
+    cards.filter((c) => c.repetitions <= 1).map((c) => c.id),
+  )
   const bySession = new Map<string, ReviewSession[]>()
-  for (const s of sessions) bySession.set(s.sessionId, [...(bySession.get(s.sessionId) ?? []), s])
+  for (const s of sessions)
+    bySession.set(s.sessionId, [...(bySession.get(s.sessionId) ?? []), s])
 
-  const points: { minute: number; freshCorrect: number; freshTotal: number }[] = []
+  const points: { minute: number; freshCorrect: number; freshTotal: number }[] =
+    []
   for (const [, list] of bySession) {
-    const sorted = [...list].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    const sorted = [...list].sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    )
     // estimate minute as index * 2 (approx)
     sorted.forEach((s, idx) => {
       if (!freshIds.has(s.cardId)) return
       const minute = Math.floor(idx * 1.5)
-      const bucket = points.find((p) => p.minute === minute) ?? (() => {
-        const p = { minute, freshCorrect: 0, freshTotal: 0 }
-        points.push(p)
-        return p
-      })()
+      const bucket =
+        points.find((p) => p.minute === minute) ??
+        (() => {
+          const p = { minute, freshCorrect: 0, freshTotal: 0 }
+          points.push(p)
+          return p
+        })()
       bucket.freshTotal++
       if (s.grade >= 2) bucket.freshCorrect++
     })
@@ -117,8 +140,18 @@ export function actionablePattern(
   // Find drop after 20m
   const early = points.filter((p) => p.minute < 20)
   const late = points.filter((p) => p.minute >= 20)
-  const earlyRate = early.reduce((a, p) => a + p.freshCorrect, 0) / Math.max(1, early.reduce((a, p) => a + p.freshTotal, 0))
-  const lateRate = late.reduce((a, p) => a + p.freshCorrect, 0) / Math.max(1, late.reduce((a, p) => a + p.freshTotal, 0))
+  const earlyRate =
+    early.reduce((a, p) => a + p.freshCorrect, 0) /
+    Math.max(
+      1,
+      early.reduce((a, p) => a + p.freshTotal, 0),
+    )
+  const lateRate =
+    late.reduce((a, p) => a + p.freshCorrect, 0) /
+    Math.max(
+      1,
+      late.reduce((a, p) => a + p.freshTotal, 0),
+    )
   if (earlyRate - lateRate > 0.18) {
     return {
       text: 'Accuracy on new material dips after ~20 minutes',
@@ -127,9 +160,14 @@ export function actionablePattern(
   }
 
   // Fallback: overall due backlog
-  const dueToday = cards.filter((c) => c.dueDate <= new Date().toISOString().slice(0, 10)).length
+  const dueToday = cards.filter(
+    (c) => c.dueDate <= new Date().toISOString().slice(0, 10),
+  ).length
   if (dueToday > 20) {
-    return { text: 'You have a backlog of due cards', stat: `${dueToday} due today — consider a focused 15m session` }
+    return {
+      text: 'You have a backlog of due cards',
+      stat: `${dueToday} due today — consider a focused 15m session`,
+    }
   }
 
   return null

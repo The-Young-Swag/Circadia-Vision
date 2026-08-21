@@ -14,34 +14,52 @@ describe('EWMA baseline', () => {
   it('starts empty and gains samples', () => {
     const b = createEmptyBaseline()
     expect(hasBaseline(b)).toBe(false)
-    let snap = updateEwma(b.interKeyLatency, 100)
+    const snap = updateEwma(b.interKeyLatency, 100)
     expect(snap.sampleCount).toBe(1)
     // fill enough samples
     let cur = snap
-    for (let i = 0; i < MIN_SAMPLES_FOR_BASELINE; i++) cur = updateEwma(cur, 100 + i)
-    const map = { ...b, interKeyLatency: cur, dwellTime: cur, correctionRate: cur, wpm: cur }
+    for (let i = 0; i < MIN_SAMPLES_FOR_BASELINE; i++)
+      cur = updateEwma(cur, 100 + i)
+    const map = {
+      ...b,
+      interKeyLatency: cur,
+      dwellTime: cur,
+      correctionRate: cur,
+      wpm: cur,
+    }
     expect(hasBaseline(map)).toBe(true)
   })
 
   it('zScore near zero for mean', () => {
     let s = updateEwma(createEmptyBaseline().interKeyLatency, 100)
-    for (let i = 0; i < 10; i++) s = updateEwma(s, 100 + (Math.random() - 0.5) * 2)
+    for (let i = 0; i < 10; i++)
+      s = updateEwma(s, 100 + (Math.random() - 0.5) * 2)
     expect(Math.abs(zScore(100, s))).toBeLessThan(1)
   })
 
   it('elevated detection requires sustained window', () => {
-    let base = createEmptyBaseline()
+    const base = createEmptyBaseline()
     for (const k of Object.keys(base) as Array<keyof typeof base>) {
       let s = base[k]
       for (let i = 0; i < 10; i++) s = updateEwma(s, k === 'wpm' ? 60 : 100)
       base[k] = s
     }
     // normal window -> not elevated
-    const normal = Array.from({ length: 3 }, () => ({ interKeyLatency: 100, dwellTime: 90, correctionRate: 0.05, wpm: 60 }))
+    const normal = Array.from({ length: 3 }, () => ({
+      interKeyLatency: 100,
+      dwellTime: 90,
+      correctionRate: 0.05,
+      wpm: 60,
+    }))
     expect(isElevatedLoad(normal, base)).toBe(false)
 
     // fatigued: high IKL, high dwell, high corr, low wpm
-    const fatigued = Array.from({ length: 3 }, () => ({ interKeyLatency: 160, dwellTime: 130, correctionRate: 0.15, wpm: 35 }))
+    const fatigued = Array.from({ length: 3 }, () => ({
+      interKeyLatency: 160,
+      dwellTime: 130,
+      correctionRate: 0.15,
+      wpm: 35,
+    }))
     expect(isElevatedLoad(fatigued, base)).toBe(true)
 
     // only 2 minutes sustained when 3 required -> false
