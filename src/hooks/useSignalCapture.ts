@@ -1,19 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createCapture, type AggregatedFeatures } from '#/lib/signals'
 
+// Reusable React behavior — encapsulates timing capture (external system)
+// Pure: handle is created once via lazy state initializer, never during render assignment
 export function useSignalCapture(enabled: boolean) {
-  const handleRef = useRef<ReturnType<typeof createCapture> | null>(null)
+  const [handle] = useState(() => createCapture())
   const [live, setLive] = useState<AggregatedFeatures | null>(null)
   const [eventsCount, setEventsCount] = useState(0)
-
-  if (!handleRef.current) handleRef.current = createCapture()
-  const handle = handleRef.current
 
   useEffect(() => {
     if (!enabled) return
 
     function onKeyDown(e: KeyboardEvent) {
-      // architectural discard: only timing + isCorrection boolean derived
       handle.onKeyDown({ key: e.key, timeStamp: performance.now() })
       setEventsCount((c) => c + 1)
     }
@@ -36,5 +34,7 @@ export function useSignalCapture(enabled: boolean) {
     }
   }, [enabled, handle])
 
-  return { live, eventsCount, handle, reset: () => handle.reset() }
+  const reset = useCallback(() => handle.reset(), [handle])
+
+  return { live, eventsCount, handle, reset }
 }
