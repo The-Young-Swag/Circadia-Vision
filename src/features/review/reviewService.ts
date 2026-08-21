@@ -1,16 +1,16 @@
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
+import { GradeSchema } from '#/features/review/schemas'
 import { sm2 } from '#/shared/lib/sm2'
 import type { Grade } from '#/shared/lib/sm2'
 import {
-  updateEwma,
   DEFAULT_ALPHA,
+  updateEwma,
 } from '#/shared/lib/baseline'
 import type { AggregatedFeatures } from '#/shared/lib/signals'
+import { baselineRepository } from '#/shared/repositories/baselineRepository'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { sessionRepository } from '#/shared/repositories/sessionRepository'
-import { baselineRepository } from '#/shared/repositories/baselineRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
-import { GradeSchema } from '#/features/review/schemas'
 
 type GradeResult = {
   nextInterval: number
@@ -19,9 +19,6 @@ type GradeResult = {
   nextDueDate: string
 }
 
-/**
- * Calculate the next SM-2 state without touching persistence.
- */
 export function calculateNextReview(
   card: Card,
   grade: Grade,
@@ -51,15 +48,6 @@ export function calculateNextReview(
   }
 }
 
-/**
- * Persist one card review.
- *
- * durationMs currently means:
- * "elapsed time since the beginning of the current study session
- * when this review was recorded."
- *
- * It is intentionally not interpreted as an individual card duration.
- */
 export async function persistGrade(params: {
   card: Card
   grade: Grade
@@ -89,10 +77,7 @@ export async function persistGrade(params: {
     sessionId: params.sessionId,
     timestamp: now.toISOString(),
     grade: params.grade,
-    durationMs: Math.max(
-      0,
-      Date.now() - params.startedAt,
-    ),
+    durationMs: Math.max(0, Date.now() - params.startedAt),
   })
 
   if (params.live) {
@@ -104,12 +89,6 @@ export async function persistGrade(params: {
   }
 }
 
-/**
- * Update the user's local EWMA baseline from one live signal sample.
- *
- * This remains independent from calibration-session counting.
- * A session can contain multiple signal samples.
- */
 async function updateBaseline(
   live: AggregatedFeatures,
   now: Date,
@@ -150,19 +129,10 @@ async function updateBaseline(
   }
 }
 
-/**
- * Mark ONE completed review session as one calibration session.
- *
- * Calibration is capped at five completed sessions because the
- * product's cold-start model is 3–5 sessions.
- */
 export async function completeCalibrationSession(
   currentN: number,
 ): Promise<number> {
-  const nextN = Math.min(
-    Math.max(currentN, 0) + 1,
-    5,
-  )
+  const nextN = Math.min(Math.max(currentN, 0) + 1, 5)
 
   await settingsRepository.setCalibrationSessions(nextN)
 

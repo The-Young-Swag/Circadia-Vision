@@ -1,5 +1,5 @@
 import { useEffect, useState, useTransition } from 'react'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 
 type CardDialogProps = {
@@ -64,13 +64,13 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
       onClick={onClose}
     >
       <div
-        className="card-flat w-full max-w-[560px] p-6 max-h-[90vh] overflow-auto"
+        className="card-flat w-full max-w-140 p-6 max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-semibold text-[17px]">
           {card ? 'Edit card' : 'Create a new card'}
         </h3>
-        <p className="text-sm text-[var(--ink-soft)] mt-1">
+        <p className="text-sm text-(--ink-soft) mt-1">
           {card
             ? 'Make changes and save. It will update right away.'
             : 'One idea per card works best. You can add many more after.'}
@@ -78,7 +78,7 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
         <div className="grid gap-4 mt-5">
           <label className="text-sm">
             <span className="font-medium">Front — what you’ll see first</span>
-            <span className="text-[var(--ink-faint)] font-normal">
+            <span className="text-(--ink-faint) font-normal">
               {' '}
               (question, prompt, word)
             </span>
@@ -87,13 +87,13 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
               onChange={(e) => setFront(e.target.value)}
               rows={3}
               autoFocus
-              className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-[15px] outline-none focus:border-[var(--blue)] focus:ring-2 focus:ring-[var(--blue)]/20"
+              className="mt-1.5 w-full rounded-xl border border-(--line) bg-(--surface) p-3 text-[15px] outline-none focus:border-(--blue) focus:ring-2 focus:ring-(--blue)/20"
               placeholder="e.g. What is the primary neurotransmitter at the neuromuscular junction?"
             />
           </label>
           <label className="text-sm">
             <span className="font-medium">Back — the answer</span>
-            <span className="text-[var(--ink-faint)] font-normal">
+            <span className="text-(--ink-faint) font-normal">
               {' '}
               (keep it concise)
             </span>
@@ -101,14 +101,14 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
               value={back}
               onChange={(e) => setBack(e.target.value)}
               rows={3}
-              className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-[15px] outline-none focus:border-[var(--blue)] focus:ring-2 focus:ring-[var(--blue)]/20"
+              className="mt-1.5 w-full rounded-xl border border-(--line) bg-(--surface) p-3 text-[15px] outline-none focus:border-(--blue) focus:ring-2 focus:ring-(--blue)/20"
               placeholder="e.g. Acetylcholine — released at the neuromuscular junction"
             />
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="text-sm">
               <span className="font-medium">Topic</span>
-              <span className="text-[var(--ink-faint)] font-normal">
+              <span className="text-(--ink-faint) font-normal">
                 {' '}
                 (groups your cards)
               </span>
@@ -116,7 +116,7 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 list="topic-suggestions"
-                className="mt-1.5 w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--blue)]"
+                className="mt-1.5 w-full rounded-full border border-(--line) bg-(--surface) px-3.5 py-2.5 text-sm outline-none focus:border-(--blue)"
                 placeholder="General"
               />
               <datalist id="topic-suggestions">
@@ -128,7 +128,7 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
             </label>
             <label className="text-sm">
               <span className="font-medium">Target date</span>
-              <span className="text-[var(--ink-faint)] font-normal">
+              <span className="text-(--ink-faint) font-normal">
                 {' '}
                 (optional)
               </span>
@@ -136,11 +136,11 @@ export function CardDialog({ card, onClose, onSaved }: CardDialogProps) {
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="mt-1.5 w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none"
+                className="mt-1.5 w-full rounded-full border border-(--line) bg-(--surface) px-3.5 py-2.5 text-sm outline-none"
               />
             </label>
           </div>
-          <p className="text-xs text-[var(--ink-faint)]">
+          <p className="text-xs text-(--ink-faint)">
             Tip: Good cards are short and test one idea. You can always edit
             later.
           </p>

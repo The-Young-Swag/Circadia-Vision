@@ -1,6 +1,6 @@
 import { GradeSchema } from './schemas'
 import { persistGrade as servicePersistGrade } from './reviewService'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 import type { AggregatedFeatures } from '#/shared/lib/signals'
 
 // Actions — React 19 mutations (Guide §18, §19)

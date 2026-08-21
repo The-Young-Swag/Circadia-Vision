@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react'
 
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 import { seedIfEmpty } from '#/shared/lib/db/seed'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'

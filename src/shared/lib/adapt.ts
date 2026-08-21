@@ -7,7 +7,7 @@
  */
 
 import { confidenceScore } from '#/shared/lib/sm2'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 
 export type Adaptation = {
   shouldAdapt: boolean

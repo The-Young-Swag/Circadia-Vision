@@ -1,5 +1,5 @@
-import { db  } from '#/shared/lib/db/dexie'
-import type {SessionSignal} from '#/shared/lib/db/dexie';
+import { db } from '#/shared/lib/db/dexie'
+import type { SessionSignal } from '#/shared/types/domain'
 
 export const signalRepository = {
   async add(signal: SessionSignal): Promise<void> {
@@ -7,7 +7,10 @@ export const signalRepository = {
   },
 
   async findBySession(sessionId: string): Promise<SessionSignal[]> {
-    return db.sessionSignals.where('sessionId').equals(sessionId).toArray()
+    return db.sessionSignals
+      .where('sessionId')
+      .equals(sessionId)
+      .toArray()
   },
 
   async findRecent(limit = 20): Promise<SessionSignal[]> {

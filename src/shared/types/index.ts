@@ -1,5 +1,3 @@
-// Global shared types — only truly cross-cutting types here (Guide: types/ for global only)
-// Feature-specific types stay in features/*/types.ts
 export type {
   Card,
   ReviewSession,
@@ -8,5 +6,6 @@ export type {
   Insight,
   AppSettings,
   FeatureName,
-} from '#/shared/lib/db/dexie'
+} from './domain'
+
 export type { Grade, SM2State, SM2Result } from '#/shared/lib/sm2'

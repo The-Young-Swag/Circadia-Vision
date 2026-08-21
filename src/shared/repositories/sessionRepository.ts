@@ -1,5 +1,5 @@
-import { db  } from '#/shared/lib/db/dexie'
-import type {ReviewSession} from '#/shared/lib/db/dexie';
+import { db } from '#/shared/lib/db/dexie'
+import type { ReviewSession } from '#/shared/types/domain'
 
 export const sessionRepository = {
   async findAll(): Promise<ReviewSession[]> {
@@ -7,7 +7,10 @@ export const sessionRepository = {
   },
 
   async findBySessionId(sessionId: string): Promise<ReviewSession[]> {
-    return db.reviewSessions.where('sessionId').equals(sessionId).toArray()
+    return db.reviewSessions
+      .where('sessionId')
+      .equals(sessionId)
+      .toArray()
   },
 
   async create(session: ReviewSession): Promise<void> {

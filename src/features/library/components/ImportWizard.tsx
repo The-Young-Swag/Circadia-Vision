@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 import { parseAny  } from '#/shared/lib/import'
 import type {RawCard} from '#/shared/lib/import';
 import { cardRepository } from '#/shared/repositories/cardRepository'
@@ -187,20 +187,20 @@ export function ImportWizard({
       onClick={onClose}
     >
       <div
-        className="card-flat w-full max-w-[880px] max-h-[92vh] flex flex-col overflow-hidden"
+        className="card-flat w-full max-w-220 max-h-[92vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header — friendly, not technical */}
-        <div className="px-6 pt-6 pb-4 border-b border-[var(--line)] shrink-0">
+        <div className="px-6 pt-6 pb-4 border-b border-(--line) shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <h2 className="display text-[22px] leading-tight flex items-center gap-2">
-                <span className="h-8 w-8 rounded-full bg-[var(--ink)] text-white grid place-items-center">
+                <span className="h-8 w-8 rounded-full bg-(--ink) text-white grid place-items-center">
                   <Sparkles size={16} />
                 </span>{' '}
                 Add to your library
               </h2>
-              <p className="text-sm text-[var(--ink-soft)] mt-2 leading-relaxed max-w-[60ch]">
+              <p className="text-sm text-(--ink-soft) mt-2 leading-relaxed max-w-[60ch]">
                 Paste whatever you have — notes, lists, questions — or upload a
                 file. We’ll turn it into study cards you can tweak before
                 saving. No special formatting needed.
@@ -209,23 +209,23 @@ export function ImportWizard({
             <button
               aria-label="Close"
               onClick={onClose}
-              className="h-9 w-9 grid place-items-center rounded-full border border-[var(--line)] hover:bg-[var(--surface-muted)] shrink-0"
+              className="h-9 w-9 grid place-items-center rounded-full border border-(--line) hover:bg-(--surface-muted) shrink-0"
             >
               <X size={16} />
             </button>
           </div>
 
           {/* Mode switch — large, inclusive */}
-          <div className="mt-5 inline-flex rounded-full border border-[var(--line)] bg-[var(--surface-muted)] p-1">
+          <div className="mt-5 inline-flex rounded-full border border-(--line) bg-(--surface-muted) p-1">
             <button
               onClick={() => setMode('paste')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${mode === 'paste' ? 'bg-white border border-[var(--line)] shadow-sm text-[var(--ink)]' : 'text-[var(--ink-soft)]'}`}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${mode === 'paste' ? 'bg-white border border-(--line) shadow-sm text-(--ink)' : 'text-(--ink-soft)'}`}
             >
               <FileText size={16} /> Paste notes
             </button>
             <button
               onClick={() => setMode('file')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${mode === 'file' ? 'bg-white border border-[var(--line)] shadow-sm text-[var(--ink)]' : 'text-[var(--ink-soft)]'}`}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${mode === 'file' ? 'bg-white border border-(--line) shadow-sm text-(--ink)' : 'text-(--ink-soft)'}`}
             >
               <Upload size={16} /> Upload file
             </button>
@@ -238,7 +238,7 @@ export function ImportWizard({
               <>
                 {/* Templates — one-tap help for anyone */}
                 <div>
-                  <div className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-faint)]">
+                  <div className="text-xs font-semibold tracking-wide uppercase text-(--ink-faint)">
                     Start with an example — tap to try
                   </div>
                   <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -246,12 +246,12 @@ export function ImportWizard({
                       <button
                         key={k}
                         onClick={() => useTemplate(k)}
-                        className="text-left rounded-xl border border-[var(--line)] bg-white p-3 hover:border-[var(--blue)] hover:bg-sky-50/50 transition group"
+                        className="text-left rounded-xl border border-(--line) bg-white p-3 hover:border-(--blue) hover:bg-sky-50/50 transition group"
                       >
-                        <div className="text-sm font-semibold group-hover:text-[var(--blue)]">
+                        <div className="text-sm font-semibold group-hover:text-(--blue)">
                           {t.label}
                         </div>
-                        <div className="text-xs text-[var(--ink-faint)] mt-0.5">
+                        <div className="text-xs text-(--ink-faint) mt-0.5">
                           {t.hint}
                         </div>
                       </button>
@@ -261,14 +261,14 @@ export function ImportWizard({
 
                 <label className="block">
                   <span className="text-sm font-medium">Your notes</span>
-                  <span className="text-xs text-[var(--ink-faint)] ml-2">
+                  <span className="text-xs text-(--ink-faint) ml-2">
                     Paste however they are — we’ll sort it
                   </span>
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     rows={9}
-                    className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface-muted)] p-4 text-[15px] leading-relaxed outline-none focus:border-[var(--blue)] focus:bg-white placeholder:text-[var(--ink-faint)]"
+                    className="mt-2 w-full rounded-xl border border-(--line) bg-(--surface-muted) p-4 text-[15px] leading-relaxed outline-none focus:border-(--blue) focus:bg-white placeholder:text-(--ink-faint)"
                     placeholder={`Try:
 
 Photosynthesis :: How plants make food
@@ -280,7 +280,7 @@ A: How plants use sunlight
 
 Or just one fact per line — we’ll handle the rest.`}
                   />
-                  <span className="text-xs text-[var(--ink-faint)] mt-1.5 block">
+                  <span className="text-xs text-(--ink-faint) mt-1.5 block">
                     Tip: One idea per line works great. You can also use
                     “Question :: Answer”.
                   </span>
@@ -288,7 +288,7 @@ Or just one fact per line — we’ll handle the rest.`}
 
                 <button
                   onClick={() => setShowTips((v) => !v)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-(--ink-soft) hover:text-(--ink)"
                 >
                   <Info size={14} /> How it works{' '}
                   <ChevronDown
@@ -297,7 +297,7 @@ Or just one fact per line — we’ll handle the rest.`}
                   />
                 </button>
                 {showTips && (
-                  <div className="rounded-xl border border-[var(--line)] bg-[var(--surface-muted)] p-4 text-sm leading-relaxed text-[var(--ink-soft)]">
+                  <div className="rounded-xl border border-(--line) bg-(--surface-muted) p-4 text-sm leading-relaxed text-(--ink-soft)">
                     <ul className="list-disc pl-5 space-y-1">
                       <li>
                         <strong>Headings become topics</strong> — Start a line
@@ -343,19 +343,19 @@ Or just one fact per line — we’ll handle the rest.`}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={onDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition ${dragOver ? 'border-[var(--blue)] bg-sky-50' : 'border-[var(--line)] bg-[var(--surface-muted)] hover:border-[var(--line-strong)] bg-white'}`}
+                  className={`rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition ${dragOver ? 'border-(--blue) bg-sky-50' : 'border-(--line) hover:border-(--line-strong) bg-white'}`}
                 >
-                  <div className="mx-auto h-10 w-10 rounded-full bg-white border border-[var(--line)] grid place-items-center">
+                  <div className="mx-auto h-10 w-10 rounded-full bg-white border border-(--line) grid place-items-center">
                     <Upload size={18} />
                   </div>
                   <div className="font-medium mt-3">
                     Drop your file here or click to browse
                   </div>
-                  <div className="text-sm text-[var(--ink-faint)] mt-1">
+                  <div className="text-sm text-(--ink-faint) mt-1">
                     Supported: {SUPPORTED} · Your data stays on this device
                   </div>
                   {fileName && (
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white border border-[var(--line)] px-3 py-1.5 text-sm">
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white border border-(--line) px-3 py-1.5 text-sm">
                       <FileText size={14} /> {fileName}
                     </div>
                   )}
@@ -368,15 +368,15 @@ Or just one fact per line — we’ll handle the rest.`}
                   />
                 </div>
                 {text && (
-                  <div className="rounded-xl border border-[var(--line)] bg-white p-3">
-                    <div className="text-xs font-semibold text-[var(--ink-faint)] tracking-wide uppercase">
+                  <div className="rounded-xl border border-(--line) bg-white p-3">
+                    <div className="text-xs font-semibold text-(--ink-faint) tracking-wide uppercase">
                       File contents — you can still edit
                     </div>
                     <textarea
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       rows={6}
-                      className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface-muted)] p-3 text-sm font-mono outline-none"
+                      className="mt-2 w-full rounded-xl border border-(--line) bg-(--surface-muted) p-3 text-sm font-mono outline-none"
                     />
                   </div>
                 )}
@@ -384,11 +384,11 @@ Or just one fact per line — we’ll handle the rest.`}
             )}
 
             {/* Live preview — the real inclusivity: see before you save, edit anything */}
-            <div className="border-t border-[var(--line)] pt-5">
+            <div className="border-t border-(--line) pt-5">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
                   Preview{' '}
-                  <span className="rounded-full bg-[var(--surface-muted)] border border-[var(--line)] px-2.5 py-0.5 text-xs font-medium">
+                  <span className="rounded-full bg-(--surface-muted) border border-(--line) px-2.5 py-0.5 text-xs font-medium">
                     {editable.length} card{editable.length === 1 ? '' : 's'}{' '}
                     found
                   </span>
@@ -401,7 +401,7 @@ Or just one fact per line — we’ll handle the rest.`}
                 {editable.length > 0 && (
                   <button
                     onClick={addBlank}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-muted)]"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-(--line) bg-white px-3 py-1.5 text-xs font-medium hover:bg-(--surface-muted)"
                   >
                     <Plus size={12} /> Add card
                   </button>
@@ -420,66 +420,66 @@ Or just one fact per line — we’ll handle the rest.`}
               )}
 
               {editable.length === 0 ? (
-                <div className="mt-4 rounded-xl border border-dashed border-[var(--line)] bg-[var(--surface-muted)] p-8 text-center">
+                <div className="mt-4 rounded-xl border border-dashed border-(--line) bg-(--surface-muted) p-8 text-center">
                   <div className="text-sm font-medium">No cards yet</div>
-                  <div className="text-sm text-[var(--ink-soft)] mt-1 max-w-[40ch] mx-auto">
+                  <div className="text-sm text-(--ink-soft) mt-1 max-w-[40ch] mx-auto">
                     Paste some notes above or try an example. Each card has a
                     front (question) and a back (answer) — you’ll be able to
                     tweak every one.
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 grid gap-3 max-h-[360px] overflow-auto pr-1">
+                <div className="mt-4 grid gap-3 max-h-90 overflow-auto pr-1">
                   {editable.map((c, i) => (
                     <div
                       key={i}
-                      className="rounded-xl border border-[var(--line)] bg-white p-3 sm:p-4"
+                      className="rounded-xl border border-(--line) bg-white p-3 sm:p-4"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-faint)]">
+                        <span className="text-xs font-semibold tracking-wide uppercase text-(--ink-faint)">
                           Card {i + 1}
                         </span>
                         <button
                           aria-label={`Remove card ${i + 1}`}
                           onClick={() => removeCard(i)}
-                          className="h-7 w-7 grid place-items-center rounded-full border border-transparent hover:border-[var(--line)] hover:bg-[var(--surface-muted)] text-[var(--ink-faint)]"
+                          className="h-7 w-7 grid place-items-center rounded-full border border-transparent hover:border-(--line) hover:bg-(--surface-muted) text-(--ink-faint)"
                         >
                           <Trash2 size={14} />
                         </button>
                       </div>
                       <div className="mt-2 grid gap-2.5">
                         <label className="text-xs font-medium">
-                          <span className="text-[var(--ink-faint)]">Front</span>
+                          <span className="text-(--ink-faint)">Front</span>
                           <textarea
                             value={c.front}
                             onChange={(e) =>
                               updateCard(i, { front: e.target.value })
                             }
                             rows={2}
-                            className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-2.5 text-sm outline-none focus:border-[var(--blue)]"
+                            className="mt-1 w-full rounded-xl border border-(--line) bg-(--surface) p-2.5 text-sm outline-none focus:border-(--blue)"
                             placeholder="Question or prompt"
                           />
                         </label>
                         <label className="text-xs font-medium">
-                          <span className="text-[var(--ink-faint)]">Back</span>
+                          <span className="text-(--ink-faint)">Back</span>
                           <textarea
                             value={c.back}
                             onChange={(e) =>
                               updateCard(i, { back: e.target.value })
                             }
                             rows={2}
-                            className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-2.5 text-sm outline-none focus:border-[var(--blue)]"
+                            className="mt-1 w-full rounded-xl border border-(--line) bg-(--surface) p-2.5 text-sm outline-none focus:border-(--blue)"
                             placeholder="Answer"
                           />
                         </label>
-                        <label className="text-xs font-medium max-w-[240px]">
-                          <span className="text-[var(--ink-faint)]">Topic</span>
+                        <label className="text-xs font-medium max-w-60">
+                          <span className="text-(--ink-faint)">Topic</span>
                           <input
                             value={c.topic}
                             onChange={(e) =>
                               updateCard(i, { topic: e.target.value })
                             }
-                            className="mt-1 w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 text-sm outline-none focus:border-[var(--blue)]"
+                            className="mt-1 w-full rounded-full border border-(--line) bg-(--surface) px-3 py-1.5 text-sm outline-none focus:border-(--blue)"
                             placeholder="General"
                           />
                         </label>
@@ -489,7 +489,7 @@ Or just one fact per line — we’ll handle the rest.`}
                 </div>
               )}
               {editable.length > 20 && (
-                <p className="text-xs text-[var(--ink-faint)] mt-2">
+                <p className="text-xs text-(--ink-faint) mt-2">
                   Showing all {editable.length} cards — they’ll all be added.
                 </p>
               )}
@@ -498,7 +498,7 @@ Or just one fact per line — we’ll handle the rest.`}
         </div>
 
         {/* Footer — calm, predictable */}
-        <div className="shrink-0 border-t border-[var(--line)] bg-[var(--surface-muted)] px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="shrink-0 border-t border-(--line) bg-(--surface-muted) px-6 py-4 flex flex-wrap items-center justify-between gap-3">
           <button className="btn-ghost bg-white" onClick={onClose}>
             Cancel
           </button>

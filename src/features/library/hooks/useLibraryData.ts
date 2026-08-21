@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 
 // Reusable React behavior: sync with external store (Dexie)

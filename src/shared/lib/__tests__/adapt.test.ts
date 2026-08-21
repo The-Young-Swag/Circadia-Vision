@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { adaptQueue, buildQueue } from '#/shared/lib/adapt'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 
 function card(overrides: Partial<Card> & { front: string }): Card {
   const { front, ...rest } = overrides

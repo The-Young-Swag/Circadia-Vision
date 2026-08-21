@@ -1,9 +1,5 @@
-import { db  } from '#/shared/lib/db/dexie'
-import type {Card} from '#/shared/lib/db/dexie';
-
-// Repository owns persistence — Drizzle/Dexie never leaks to UI directly (Guide §25)
-// UI → Service → Repository → Dexie → IndexedDB
-// If we later migrate IndexedDB → SQLite WASM, only this file changes.
+import { db } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 
 export const cardRepository = {
   async findAll(): Promise<Card[]> {
@@ -23,7 +19,9 @@ export const cardRepository = {
   },
 
   async createMany(cards: Card[]): Promise<void> {
-    if (cards.length) await db.cards.bulkAdd(cards)
+    if (cards.length === 0) return
+
+    await db.cards.bulkAdd(cards)
   },
 
   async update(id: string, patch: Partial<Card>): Promise<void> {

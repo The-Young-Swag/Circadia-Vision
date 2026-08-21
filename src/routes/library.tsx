@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import type { Card } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/types/domain'
 import { exportToJson, exportToMarkdown } from '#/shared/lib/import'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { Search, Plus, Upload, Download, Filter, X } from 'lucide-react'
@@ -43,7 +43,7 @@ function Library() {
         <div>
           <p className="kicker">Library</p>
           <h1 className="display text-[28px]">Cards & topics</h1>
-          <p className="text-sm text-[var(--ink-soft)] mt-1">
+          <p className="text-sm text-(--ink-soft) mt-1">
             Search, filter, add, edit, delete. Changes persist locally.
           </p>
         </div>
@@ -64,29 +64,29 @@ function Library() {
       </div>
 
       <div className="card-flat p-4 mt-6 flex flex-col sm:flex-row gap-3">
-        <label className="flex-1 flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
-          <Search size={16} className="text-[var(--ink-faint)]" />
+        <label className="flex-1 flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-2">
+          <Search size={16} className="text-(--ink-faint)" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search questions, answers, or topics…"
-            className="flex-1 bg-transparent outline-none text-sm placeholder:text-[var(--ink-faint)]"
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-(--ink-faint)"
           />
           {q && (
             <button
               onClick={() => setQ('')}
-              className="text-[var(--ink-faint)]"
+              className="text-(--ink-faint)"
             >
               <X size={14} />
             </button>
           )}
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <Filter size={16} className="text-[var(--ink-faint)]" />
+          <Filter size={16} className="text-(--ink-faint)" />
           <select
             value={topicFilter}
             onChange={(e) => setTopicFilter(e.target.value)}
-            className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm"
+            className="rounded-full border border-(--line) bg-(--surface) px-3 py-2 text-sm"
           >
             {topics.map((t) => (
               <option key={t} value={t}>
@@ -140,7 +140,7 @@ function Library() {
         />
       </div>
 
-      <p className="text-xs text-[var(--ink-faint)] mt-3">
+      <p className="text-xs text-(--ink-faint) mt-3">
         Showing {filtered.length} of {cards.length} cards · No pagination, all
         local.
       </p>
