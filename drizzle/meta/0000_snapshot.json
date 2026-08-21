@@ -1,0 +1,374 @@
+{
+  "id": "40816f47-3f4a-404e-8deb-63c0804ceceb",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.app_settings": {
+      "name": "app_settings",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.baseline_features": {
+      "name": "baseline_features",
+      "schema": "",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "feature_name",
+          "typeSchema": "public",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "mean": {
+          "name": "mean",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variance": {
+          "name": "variance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stddev": {
+          "name": "stddev",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sample_count": {
+          "name": "sample_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_updated": {
+          "name": "last_updated",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.cards": {
+      "name": "cards",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "front": {
+          "name": "front",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "back": {
+          "name": "back",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "topic": {
+          "name": "topic",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_date": {
+          "name": "target_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interval": {
+          "name": "interval",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "repetitions": {
+          "name": "repetitions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ease_factor": {
+          "name": "ease_factor",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "due_date": {
+          "name": "due_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_reviewed": {
+          "name": "last_reviewed",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.insights": {
+      "name": "insights",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "statement": {
+          "name": "statement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stat": {
+          "name": "stat",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dismissed": {
+          "name": "dismissed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "insight_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.review_sessions": {
+      "name": "review_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "card_id": {
+          "name": "card_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "grade": {
+          "name": "grade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "review_sessions_card_id_cards_id_fk": {
+          "name": "review_sessions_card_id_cards_id_fk",
+          "tableFrom": "review_sessions",
+          "tableTo": "cards",
+          "columnsFrom": [
+            "card_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.session_signals": {
+      "name": "session_signals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "minute_index": {
+          "name": "minute_index",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inter_key_latency": {
+          "name": "inter_key_latency",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dwell_time": {
+          "name": "dwell_time",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "correction_rate": {
+          "name": "correction_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wpm": {
+          "name": "wpm",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "z_scores": {
+          "name": "z_scores",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.feature_name": {
+      "name": "feature_name",
+      "schema": "public",
+      "values": [
+        "interKeyLatency",
+        "dwellTime",
+        "correctionRate",
+        "wpm"
+      ]
+    },
+    "public.insight_kind": {
+      "name": "insight_kind",
+      "schema": "public",
+      "values": [
+        "retention",
+        "focus",
+        "peak",
+        "general"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
