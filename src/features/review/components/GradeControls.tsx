@@ -26,7 +26,7 @@ export function GradeControls({ onGrade }: GradeControlsProps) {
       <GradeBtn
         label="Easy"
         hint="Instant"
-        color="#0f172a"
+        color="var(--racing)"
         onClick={() => onGrade(3)}
       />
     </div>
@@ -47,7 +47,7 @@ function GradeBtn({
   return (
     <button
       onClick={onClick}
-      className="rounded-xl border border-[var(--line)] bg-white p-3 text-left hover:bg-[var(--surface-muted)]"
+      className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-left hover:bg-[var(--surface-muted)]"
       style={{ borderTopColor: color, borderTopWidth: 3 }}
     >
       <div className="text-sm font-semibold">{label}</div>

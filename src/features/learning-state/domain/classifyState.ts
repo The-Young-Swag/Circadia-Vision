@@ -1,12 +1,23 @@
 import {
   hasBaseline as checkHasBaseline,
   isElevatedLoad,
+  zScore,
 } from '#/shared/lib/baseline'
-import type { BaselineMap } from '#/shared/lib/baseline'
-import type { AggregatedFeatures } from '#/shared/lib/signals'
+
+import type {
+  BaselineMap,
+} from '#/shared/lib/baseline'
+
+import type {
+  AggregatedFeatures,
+} from '#/shared/lib/signals'
 
 export type LearningState =
-  'Sharp' | 'Steady' | 'Warming Down' | 'Recovering' | 'Insufficient Signal'
+  | 'Sharp'
+  | 'Steady'
+  | 'Warming Down'
+  | 'Recovering'
+  | 'Insufficient Signal'
 
 type ClassifyInput = {
   baseline: BaselineMap
@@ -14,67 +25,161 @@ type ClassifyInput = {
   previousState?: LearningState
 }
 
-// Pure domain — no React, no DB, no HTTP (Guide §15)
+const SHARP_Z_THRESHOLD = 0.75
+const MIN_SHARP_OBSERVATIONS = 3
+
 export function classifyLearningState({
   baseline,
   recent,
   previousState,
-}: ClassifyInput): { state: LearningState; reason: string } {
+}: ClassifyInput): {
+  state: LearningState
+  reason: string
+} {
   if (!checkHasBaseline(baseline)) {
     return {
       state: 'Insufficient Signal',
-      reason: 'Not enough sessions yet — standard scheduling for now.',
+      reason:
+        'Not enough personal signal yet. Standard scheduling is being used while Circadia learns your rhythm.',
     }
   }
 
-  const elevated = isElevatedLoad(recent, baseline)
+  if (recent.length === 0) {
+    return {
+      state: 'Steady',
+      reason:
+        'Your personal baseline is ready. Start a review to see your current rhythm.',
+    }
+  }
 
-  // Recovering: was warming down, now not elevated but recent was
-  if (previousState === 'Warming Down' && !elevated && recent.length >= 2) {
-    // Check if moving back toward baseline (z decreasing)
+  const elevated =
+    isElevatedLoad(
+      recent,
+      baseline,
+    )
+
+  if (
+    previousState === 'Warming Down' &&
+    !elevated &&
+    recent.length >= 2
+  ) {
     return {
       state: 'Recovering',
       reason:
-        'Your rhythm is moving back toward baseline — easing difficulty gradually.',
+        'Your recent rhythm is moving back toward your personal baseline.',
     }
   }
 
   if (elevated) {
     return {
       state: 'Warming Down',
-      reason: 'Your typing rhythm has been less stable for several minutes.',
+      reason:
+        'Your recent timing pattern has moved outside your usual range.',
     }
   }
 
-  // Check how close to baseline — Sharp vs Steady
-  if (recent.length > 0) {
-    const isStable = recent.length >= 3 && !elevated
-    if (isStable) {
+  /**
+   * Sharp means the recent observations are consistently
+   * better than baseline across multiple relevant dimensions.
+   *
+   * For latency/dwell/correction:
+   * lower is better.
+   *
+   * For WPM:
+   * higher is better.
+   */
+  if (
+    recent.length >=
+    MIN_SHARP_OBSERVATIONS
+  ) {
+    const recentWindow =
+      recent.slice(
+        -MIN_SHARP_OBSERVATIONS,
+      )
+
+    const sharpObservations =
+      recentWindow.filter(
+        (sample) => {
+          const latencyZ =
+            zScore(
+              sample.interKeyLatency,
+              baseline.interKeyLatency,
+            )
+
+          const dwellZ =
+            zScore(
+              sample.dwellTime,
+              baseline.dwellTime,
+            )
+
+          const correctionZ =
+            zScore(
+              sample.correctionRate,
+              baseline.correctionRate,
+            )
+
+          const wpmZ =
+            zScore(
+              sample.wpm,
+              baseline.wpm,
+            )
+
+          const positiveSignals =
+            [
+              latencyZ < -SHARP_Z_THRESHOLD,
+              dwellZ < -SHARP_Z_THRESHOLD,
+              correctionZ <
+                -SHARP_Z_THRESHOLD,
+              wpmZ >
+                SHARP_Z_THRESHOLD,
+            ].filter(Boolean)
+              .length
+
+          return positiveSignals >= 2
+        },
+      ).length
+
+    if (
+      sharpObservations >=
+      MIN_SHARP_OBSERVATIONS
+    ) {
       return {
-        state: 'Steady',
-        reason: 'Rhythm close to your personal baseline.',
+        state: 'Sharp',
+        reason:
+          'Your recent timing pattern is consistently stronger than your personal baseline.',
       }
     }
   }
 
-  return { state: 'Steady', reason: 'Rhythm within your normal range.' }
+  return {
+    state: 'Steady',
+    reason:
+      'Your recent timing pattern is within your usual range.',
+  }
 }
 
-// Helper for Home's qualitative display — never fake-precise
-export function stateLabel(state: LearningState): string {
+export function stateLabel(
+  state: LearningState,
+): string {
   return state
 }
 
-export function stateBehavior(state: LearningState): string {
+export function stateBehavior(
+  state: LearningState,
+): string {
   switch (state) {
     case 'Sharp':
       return 'Prioritize difficult / new material'
+
     case 'Steady':
       return 'Standard scheduling'
+
     case 'Warming Down':
       return 'Prioritize familiar material; consider a break'
+
     case 'Recovering':
       return 'Gradually restore difficulty'
+
     case 'Insufficient Signal':
       return 'Standard scheduling — learning your rhythm'
   }

@@ -19,7 +19,7 @@ export function AdaptationBanner({
         <Sparkles size={16} />
       </span>
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-[var(--racing)]">
+        <div className="font-medium text-[var(--ink)]">
           Your rhythm is drifting — want easier material for a bit?
         </div>
         <div className="text-sm text-[var(--ink-soft)] mt-1 leading-relaxed">

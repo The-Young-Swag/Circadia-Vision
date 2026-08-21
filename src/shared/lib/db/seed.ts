@@ -1,10 +1,5 @@
-import { db  } from '#/shared/lib/db/dexie'
-import type {Card} from '#/shared/lib/db/dexie';
-import { faker } from '@faker-js/faker'
-import { DEFAULT_ALPHA } from '#/shared/lib/baseline'
-
-// Reference to keep import used and avoid ineffective dynamic chunk
-void DEFAULT_ALPHA
+import { db } from '#/shared/lib/db/dexie'
+import type { Card } from '#/shared/lib/db/dexie'
 
 const TOPICS = [
   'Anatomy',
@@ -15,17 +10,36 @@ const TOPICS = [
   'Microbiology',
 ] as const
 
-function isoDate(offsetDays: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + offsetDays)
-  return d.toISOString().slice(0, 10)
+function isoDate(
+  offsetDays: number,
+): string {
+  const date =
+    new Date()
+
+  date.setDate(
+    date.getDate() +
+      offsetDays,
+  )
+
+  return date
+    .toISOString()
+    .slice(0, 10)
 }
 
 function uid(): string {
-  return Math.random().toString(36).slice(2, 10)
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}`
+  )
 }
 
-const SAMPLE_CARDS: Array<{ front: string; back: string; topic: string }> = [
+const SAMPLE_CARDS: Array<{
+  front: string
+  back: string
+  topic: string
+}> = [
   {
     front:
       'What is the primary neurotransmitter at the neuromuscular junction?',
@@ -33,251 +47,265 @@ const SAMPLE_CARDS: Array<{ front: string; back: string; topic: string }> = [
     topic: 'Physiology',
   },
   {
-    front: 'Which nerve innervates the thenar eminence?',
-    back: 'Median nerve (recurrent branch)',
+    front:
+      'Which nerve innervates the thenar eminence?',
+    back:
+      'Median nerve (recurrent branch)',
     topic: 'Anatomy',
   },
   {
     front: 'MOA of ACE inhibitors',
-    back: 'Block conversion of angiotensin I → II; reduce vasoconstriction & aldosterone',
+    back:
+      'Block conversion of angiotensin I → II; reduce vasoconstriction & aldosterone',
     topic: 'Pharmacology',
   },
   {
-    front: 'Rate-limiting enzyme of glycolysis',
-    back: 'Phosphofructokinase-1 (PFK-1)',
+    front:
+      'Rate-limiting enzyme of glycolysis',
+    back:
+      'Phosphofructokinase-1 (PFK-1)',
     topic: 'Biochemistry',
   },
   {
-    front: 'Reed-Sternberg cells are hallmark of…',
+    front:
+      'Reed-Sternberg cells are hallmark of…',
     back: 'Hodgkin lymphoma',
     topic: 'Pathology',
   },
   {
-    front: 'Gram-positive diplococci in pairs',
-    back: 'Streptococcus pneumoniae',
+    front:
+      'Gram-positive diplococci in pairs',
+    back:
+      'Streptococcus pneumoniae',
     topic: 'Microbiology',
   },
   {
-    front: 'Starling’s law of the heart',
-    back: 'Stroke volume ↑ with ↑ end-diastolic volume (within limits)',
+    front:
+      'Starling’s law of the heart',
+    back:
+      'Stroke volume ↑ with ↑ end-diastolic volume (within limits)',
     topic: 'Physiology',
   },
-  { front: 'Brachial plexus: roots', back: 'C5–T1', topic: 'Anatomy' },
   {
-    front: 'Warfarin antidote',
-    back: 'Vitamin K; 4F-PCC for severe bleeding',
+    front:
+      'Brachial plexus: roots',
+    back: 'C5–T1',
+    topic: 'Anatomy',
+  },
+  {
+    front:
+      'Warfarin antidote',
+    back:
+      'Vitamin K; 4F-PCC for severe bleeding',
     topic: 'Pharmacology',
   },
   {
-    front: 'HMP shunt main purpose',
-    back: 'NADPH production & ribose-5-phosphate',
+    front:
+      'HMP shunt main purpose',
+    back:
+      'NADPH production & ribose-5-phosphate',
     topic: 'Biochemistry',
   },
   {
-    front: 'Caseating granulomas → ?',
+    front:
+      'Caseating granulomas → ?',
     back: 'Tuberculosis',
     topic: 'Pathology',
   },
   {
-    front: 'Catalase-positive, coagulase-positive cocci',
+    front:
+      'Catalase-positive, coagulase-positive cocci',
     back: 'Staphylococcus aureus',
     topic: 'Microbiology',
   },
   {
-    front: 'Frank-Starling: afterload effect',
-    back: '↑ afterload → ↓ stroke volume',
+    front:
+      'Frank-Starling: afterload effect',
+    back:
+      '↑ afterload → ↓ stroke volume',
     topic: 'Physiology',
   },
   {
-    front: 'Rotator cuff muscles (SITS)',
-    back: 'Supraspinatus, Infraspinatus, Teres minor, Subscapularis',
+    front:
+      'Rotator cuff muscles (SITS)',
+    back:
+      'Supraspinatus, Infraspinatus, Teres minor, Subscapularis',
     topic: 'Anatomy',
   },
   {
-    front: 'Metformin MOA',
-    back: '↓ hepatic gluconeogenesis; ↑ insulin sensitivity (AMPK)',
+    front:
+      'Metformin MOA',
+    back:
+      '↓ hepatic gluconeogenesis; ↑ insulin sensitivity (AMPK)',
     topic: 'Pharmacology',
   },
   {
-    front: 'Essential fatty acids',
-    back: 'Linoleic (ω-6) & α-linolenic (ω-3)',
+    front:
+      'Essential fatty acids',
+    back:
+      'Linoleic (ω-6) & α-linolenic (ω-3)',
     topic: 'Biochemistry',
   },
 ]
 
-function randomSM2() {
-  const repetitions = faker.number.int({ min: 0, max: 6 })
-  const easeFactor = Number(
-    faker.number.float({ min: 1.3, max: 2.8 }).toFixed(2),
-  )
-  const interval =
-    repetitions === 0 ? 0 : [1, 6, 12, 24, 45, 90][Math.min(repetitions, 5)]
-  const dueOffset = faker.helpers.arrayElement([-3, -1, 0, 0, 1, 2, 4, 7])
-  return { repetitions, easeFactor, interval, dueDate: isoDate(dueOffset) }
+function createCard(
+  front: string,
+  back: string,
+  topic: string,
+): Card {
+  return {
+    id: uid(),
+    front,
+    back,
+    topic,
+    createdAt:
+      new Date().toISOString(),
+
+    /*
+     * New cards start genuinely new.
+     *
+     * We do not fabricate review history.
+     * The scheduler will establish these values
+     * through actual user interaction.
+     */
+    interval: 0,
+    repetitions: 0,
+    easeFactor: 2.5,
+    dueDate: isoDate(0),
+  }
 }
 
 export async function seedIfEmpty(): Promise<void> {
-  const count = await db.cards.count()
-  if (count > 0) return
+  const count =
+    await db.cards.count()
 
-  const cards: Card[] = SAMPLE_CARDS.map((s) => {
-    const sm = randomSM2()
-    return {
-      id: uid(),
-      front: s.front,
-      back: s.back,
-      topic: s.topic,
-      createdAt: new Date(
-        Date.now() - faker.number.int({ min: 0, max: 20 }) * 86400000,
-      ).toISOString(),
-      interval: sm.interval,
-      repetitions: sm.repetitions,
-      easeFactor: sm.easeFactor,
-      dueDate: sm.dueDate,
-    }
-  })
-
-  // Add some extra generated cards for volume
-  for (let i = 0; i < 18; i++) {
-    const topic = faker.helpers.arrayElement(TOPICS)
-    const sm = randomSM2()
-    cards.push({
-      id: uid(),
-      front: faker.helpers.arrayElement([
-        `Define: ${faker.lorem.words(3)}`,
-        `What is ${faker.lorem.words(2)}?`,
-        `${faker.lorem.words(4)} — mechanism?`,
-      ]),
-      back: faker.lorem.sentence({ min: 6, max: 12 }),
-      topic,
-      targetDate:
-        Math.random() > 0.7
-          ? isoDate(faker.number.int({ min: 7, max: 30 }))
-          : undefined,
-      createdAt: new Date().toISOString(),
-      interval: sm.interval,
-      repetitions: sm.repetitions,
-      easeFactor: sm.easeFactor,
-      dueDate: sm.dueDate,
-    })
+  if (count > 0) {
+    return
   }
 
-  await db.cards.bulkAdd(cards)
+  /*
+   * Seed learning CONTENT only.
+   *
+   * Deliberately do not seed:
+   * - review sessions
+   * - baseline features
+   * - session signals
+   * - personal insights
+   * - calibration progress
+   *
+   * Those must come from actual user behavior.
+   */
+  const cards: Card[] =
+    SAMPLE_CARDS.map(
+      (sample) =>
+        createCard(
+          sample.front,
+          sample.back,
+          sample.topic,
+        ),
+    )
 
-  // Seed review sessions (past 14 days)
-  const sessions: Array<{
-    id: string
-    cardId: string
-    sessionId: string
-    timestamp: string
-    grade: number
-  }> = []
-  const allCards = await db.cards.toArray()
-  for (let day = 13; day >= 0; day--) {
-    const perDay = faker.number.int({ min: 2, max: 8 })
-    const sessionId = `seed-${day}-${uid()}`
-    for (let j = 0; j < perDay; j++) {
-      const card = faker.helpers.arrayElement(allCards)
-      const ts = new Date()
-      ts.setDate(ts.getDate() - day)
-      ts.setHours(
-        faker.number.int({ min: 9, max: 22 }),
-        faker.number.int({ min: 0, max: 59 }),
-      )
-      sessions.push({
-        id: uid(),
-        cardId: card.id,
-        sessionId,
-        timestamp: ts.toISOString(),
-        grade: faker.helpers.weightedArrayElement([
-          { weight: 6, value: 2 },
-          { weight: 3, value: 3 },
-          { weight: 2, value: 1 },
-          { weight: 1, value: 0 },
-        ]),
-      })
-    }
+  /*
+   * A small set of additional neutral practice cards
+   * is acceptable for the demo, but they remain genuinely
+   * new and contain no fabricated learning history.
+   */
+  const extraCards: Array<{
+    front: string
+    back: string
+    topic: string
+  }> = [
+    {
+      front:
+        'What is the function of the Golgi apparatus?',
+      back:
+        'Modifies, sorts, and packages proteins and lipids.',
+      topic:
+        'Biochemistry',
+    },
+    {
+      front:
+        'What is the normal direction of depolarization in ventricular myocardium?',
+      back:
+        'From endocardium toward epicardium.',
+      topic:
+        'Physiology',
+    },
+    {
+      front:
+        'What is the main function of neutrophils?',
+      back:
+        'Rapid innate immune response, especially against bacterial infection.',
+      topic:
+        'Pathology',
+    },
+    {
+      front:
+        'What does an ACE inhibitor primarily reduce?',
+      back:
+        'Angiotensin II formation and aldosterone-mediated effects.',
+      topic:
+        'Pharmacology',
+    },
+    {
+      front:
+        'What stain is commonly used to identify acid-fast bacilli?',
+      back:
+        'Ziehl-Neelsen stain.',
+      topic:
+        'Microbiology',
+    },
+    {
+      front:
+        'What is the basic structural unit of the nervous system?',
+      back:
+        'The neuron.',
+      topic:
+        'Anatomy',
+    },
+  ]
+
+  for (
+    const sample of extraCards
+  ) {
+    cards.push(
+      createCard(
+        sample.front,
+        sample.back,
+        sample.topic,
+      ),
+    )
   }
-  await db.reviewSessions.bulkAdd(sessions)
 
-  // Seed baseline features (pretend 10 sessions already calibrated)
-  await db.baselineFeatures.bulkAdd([
-    {
-      name: 'interKeyLatency',
-      mean: 118,
-      variance: 420,
-      stddev: 20.5,
-      sampleCount: 12,
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      name: 'dwellTime',
-      mean: 92,
-      variance: 180,
-      stddev: 13.4,
-      sampleCount: 12,
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      name: 'correctionRate',
-      mean: 0.06,
-      variance: 0.0012,
-      stddev: 0.034,
-      sampleCount: 12,
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      name: 'wpm',
-      mean: 62,
-      variance: 85,
-      stddev: 9.2,
-      sampleCount: 12,
-      lastUpdated: new Date().toISOString(),
-    },
-  ])
+  await db.cards.bulkAdd(
+    cards,
+  )
 
-  // Seed session signals (last 3 sessions, 10 mins each)
-  const sigs: Array<Record<string, unknown>> = []
-  const now = Date.now()
-  for (let s = 0; s < 3; s++) {
-    const sid = `seed-sess-${s}`
-    for (let m = 0; m < 10; m++) {
-      sigs.push({
-        id: uid(),
-        sessionId: sid,
-        minuteIndex: m,
-        timestamp: new Date(
-          now - (3 - s) * 86400000 - (10 - m) * 60000,
-        ).toISOString(),
-        interKeyLatency: 115 + faker.number.float({ min: -12, max: 18 }),
-        dwellTime: 88 + faker.number.float({ min: -8, max: 12 }),
-        correctionRate: 0.05 + faker.number.float({ min: -0.02, max: 0.04 }),
-        wpm: 60 + faker.number.float({ min: -8, max: 10 }),
-      })
-    }
-  }
-  await db.sessionSignals.bulkAdd(sigs as never)
-
-  // Seed one insight
-  await db.insights.add({
-    id: uid(),
-    statement: 'Accuracy on new material dips after ~20 minutes',
-    stat: '78% early → 54% after 20m',
-    timestamp: new Date().toISOString(),
-    dismissed: false,
-    kind: 'focus',
-  })
-
+  /*
+   * Keep adaptive learning opt-in.
+   *
+   * There is no evidence yet that the user wants
+   * timing-based adaptation, and no evidence exists
+   * from which to generate a personalized baseline.
+   */
   await db.appSettings.put({
     key: 'hasSeenOnboarding',
-    value: JSON.stringify(true),
+    value: JSON.stringify(
+      true,
+    ),
   })
+
   await db.appSettings.put({
     key: 'adaptiveOptIn',
-    value: JSON.stringify(true),
+    value: JSON.stringify(
+      false,
+    ),
   })
+
   await db.appSettings.put({
     key: 'calibrationSessions',
-    value: JSON.stringify(12),
+    value: JSON.stringify(
+      0,
+    ),
   })
 }

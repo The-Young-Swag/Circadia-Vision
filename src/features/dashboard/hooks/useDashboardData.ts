@@ -1,53 +1,118 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useEffect, useState } from 'react'
-import type { Card, ReviewSession } from '#/shared/lib/db/dexie'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
+
+import type {
+  Card,
+  ReviewSession,
+  SessionSignal,
+} from '#/shared/lib/db/dexie'
+
 import { seedIfEmpty } from '#/shared/lib/db/seed'
+
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { sessionRepository } from '#/shared/repositories/sessionRepository'
+import { signalRepository } from '#/shared/repositories/signalRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
 
-// Custom Hook — reusable React behavior (rule 13)
-// Encapsulates sync with external system (Dexie) — correct useEffect usage
 export function useDashboardData() {
-  const [cards, setCards] = useState<Card[]>([])
-  const [sessions, setSessions] = useState<ReviewSession[]>([])
-  const [ready, setReady] = useState(false)
-  const [optIn, setOptIn] = useState<boolean | null>(null)
+  const [cards, setCards] =
+    useState<Card[]>([])
+
+  const [sessions, setSessions] =
+    useState<ReviewSession[]>([])
+
+  const [signals, setSignals] =
+    useState<SessionSignal[]>([])
+
+  const [ready, setReady] =
+    useState(false)
+
+  const [optIn, setOptIn] =
+    useState<boolean | null>(null)
+
+  const refresh =
+    useCallback(async () => {
+      const [
+        nextCards,
+        nextSessions,
+        nextSignals,
+        adaptiveOptIn,
+      ] = await Promise.all([
+        cardRepository.findAll(),
+        sessionRepository.findAll(),
+        signalRepository.findRecent(100),
+        settingsRepository.getAdaptiveOptIn(),
+      ])
+
+      setCards(nextCards)
+      setSessions(nextSessions)
+      setSignals(nextSignals)
+      setOptIn(adaptiveOptIn)
+    }, [])
 
   useEffect(() => {
     let cancelled = false
-    seedIfEmpty().then(() => {
-      void refresh()
-      if (!cancelled) setReady(true)
-    })
 
-    async function refresh() {
-      const [c, s] = await Promise.all([
-        cardRepository.findAll(),
-        sessionRepository.findAll(),
-      ])
-      if (cancelled) return
-      setCards(c)
-      setSessions(s)
-      const v = await settingsRepository.getAdaptiveOptIn()
-      if (cancelled) return
-      setOptIn(v)
+    async function initialize() {
+      try {
+        await seedIfEmpty()
+
+        if (cancelled) return
+
+        await refresh()
+
+        if (!cancelled) {
+          setReady(true)
+        }
+      } catch (error) {
+        console.error(
+          'Failed to initialize dashboard data:',
+          error,
+        )
+
+        if (!cancelled) {
+          setReady(true)
+        }
+      }
     }
 
-    const id = setInterval(() => {
-      void refresh()
-    }, 2000)
+    void initialize()
+
+    const intervalId =
+      window.setInterval(() => {
+        if (!cancelled) {
+          void refresh()
+        }
+      }, 2000)
 
     return () => {
       cancelled = true
-      clearInterval(id)
+      window.clearInterval(
+        intervalId,
+      )
     }
-  }, [])
+  }, [refresh])
 
-  const setOptInAndPersist = async (value: boolean) => {
-    await settingsRepository.setAdaptiveOptIn(value)
-    setOptIn(value)
+  const setOptInAndPersist =
+    async (value: boolean) => {
+      await settingsRepository.setAdaptiveOptIn(
+        value,
+      )
+
+      setOptIn(value)
+    }
+
+  return {
+    cards,
+    sessions,
+    signals,
+    ready,
+    optIn,
+    setOptIn:
+      setOptInAndPersist,
+    refresh,
   }
-
-  return { cards, sessions, ready, optIn, setOptIn: setOptInAndPersist }
 }

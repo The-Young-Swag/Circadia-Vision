@@ -6,36 +6,46 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Palette — Veridian Green #40826D, Emerald Green #50C878 / #10B981, British Racing Green #004225 */
+  /* Palette — Veridian #40826D, Emerald #50C878, BRG #004225 — §6 */
   --veridian: #40826d;
   --veridian-strong: #2f5d4f;
   --veridian-muted: #e8f5ef;
-  --emerald: #0e9f6e;
-  --emerald-strong: #047857;
-  --emerald-muted: #ecfdf5;
+  --veridian-small-dark: #4a9179;
+  /* for small text on dark per §6 */
+  --emerald: #50c878;
+  --emerald-strong: #3aa361;
+  --emerald-muted: #e6f5eb;
   --racing: #004225;
   --racing-strong: #002a16;
   --racing-muted: #e6f0eb;
 
-  /* Legacy aliases for backward compat — map old amber/blue/purple to greens */
-  --amber: var(--veridian);
-  --amber-strong: var(--veridian-strong);
-  --blue: var(--veridian);
-  --blue-strong: var(--veridian-strong);
-  --purple: var(--racing);
-  --purple-strong: var(--racing-strong);
+  /* Semantic performance tone — distinct from brand greens so grade/perf
+     signals (Again/Hard/Good/Easy, low/med/high) stay visually distinguishable.
+     Matches the amber-500 already used for the "Warming Down" state dot. */
+  --warning: #d97706;
+  --warning-strong: #b45309;
+  --warning-muted: #fef3e2;
 
-  --ink: #0f1f1a;
-  --ink-soft: #47504b;
-  --ink-faint: #6b7a72;
-  --line: #dde8e2;
+  /* Legacy aliases — now map to 3 distinct semantic tones, not 2 shades of
+     green. blue=good(emerald), amber=medium(warning), purple=poor(destructive) */
+  --amber: var(--warning);
+  --amber-strong: var(--warning-strong);
+  --blue: var(--emerald);
+  --blue-strong: var(--emerald-strong);
+  --purple: var(--destructive);
+  --purple-strong: #b91c1c;
+
+  --ink: #17201b;
+  --ink-soft: #5d6862;
+  --ink-faint: #667269;
+  --line: #dce3de;
   --line-strong: #c5d8ce;
   --surface: #ffffff;
   --surface-muted: #f5f9f7;
-  --surface-raised: #ffffff;
+  --surface-raised: #fbfcf9;
   --nav-bg: #ffffff;
 
-  --background: #f7fbf8;
+  --background: #f6f7f3;
   --foreground: var(--ink);
   --card: var(--surface);
   --card-foreground: var(--ink);
@@ -58,7 +68,7 @@
   --chart-1: var(--veridian);
   --chart-2: var(--emerald);
   --chart-3: var(--racing);
-  --chart-4: #0f1f1a;
+  --chart-4: #17201b;
   --chart-5: #94a3b8;
   --sidebar: #ffffff;
   --sidebar-foreground: var(--ink);
@@ -71,47 +81,52 @@
 }
 
 .dark {
-  --ink: #e8f5ef;
-  --ink-soft: #9ab3a8;
-  --ink-faint: #7a9a8f;
-  --line: #1e3a2e;
-  --line-strong: #2a4f3e;
-  --surface: #0f1f1a;
-  --surface-muted: #0b1a14;
-  --surface-raised: #14261e;
-  --nav-bg: #0f1f1a;
+  /* Slightly lighter amber for AA contrast against dark surfaces */
+  --warning: #f59e0b;
+  --warning-strong: #d97706;
+  --warning-muted: #2a2115;
 
-  --background: #08130f;
-  --foreground: #e8f5ef;
-  --card: #0f1f1a;
-  --card-foreground: #e8f5ef;
-  --popover: #0f1f1a;
-  --popover-foreground: #e8f5ef;
+  --ink: #e9f2ec;
+  --ink-soft: #aabbb0;
+  --ink-faint: #718279;
+  --line: #2e3036;
+  --line-strong: #3a3d44;
+  --surface: #1c1e22;
+  --surface-muted: #141517;
+  --surface-raised: #24262b;
+  --nav-bg: #1c1e22;
+
+  --background: #141517;
+  --foreground: #e9f2ec;
+  --card: #1c1e22;
+  --card-foreground: #e9f2ec;
+  --popover: #1c1e22;
+  --popover-foreground: #e9f2ec;
   --primary: var(--emerald);
-  --primary-foreground: #0b1a14;
-  --secondary: #1a3328;
-  --secondary-foreground: #e8f5ef;
-  --muted: #14261e;
-  --muted-foreground: #7a9a8f;
-  --accent: #1a3328;
-  --accent-foreground: #e8f5ef;
+  --primary-foreground: #141517;
+  --secondary: #24262b;
+  --secondary-foreground: #e9f2ec;
+  --muted: #24262b;
+  --muted-foreground: #aabbb0;
+  --accent: #24262b;
+  --accent-foreground: #e9f2ec;
   --destructive: #ef4444;
   --destructive-foreground: #fef2f2;
-  --border: #1e3a2e;
-  --input: #1e3a2e;
+  --border: #2e3036;
+  --input: #2e3036;
   --ring: var(--veridian);
   --chart-1: var(--veridian);
   --chart-2: var(--emerald);
-  --chart-3: #6bc49e;
-  --chart-4: #e8f5ef;
-  --chart-5: #5a7a6f;
-  --sidebar: #0a1f16;
-  --sidebar-foreground: #e8f5ef;
+  --chart-3: var(--veridian-small-dark);
+  --chart-4: #e9f2ec;
+  --chart-5: #718279;
+  --sidebar: #141517;
+  --sidebar-foreground: #e9f2ec;
   --sidebar-primary: #50c878;
-  --sidebar-primary-foreground: #0a1f16;
-  --sidebar-accent: #143320;
-  --sidebar-accent-foreground: #c8e6d8;
-  --sidebar-border: #1e3a2e;
+  --sidebar-primary-foreground: #141517;
+  --sidebar-accent: #1c1e22;
+  --sidebar-accent-foreground: #e9f2ec;
+  --sidebar-border: #2e3036;
   --sidebar-ring: var(--veridian);
 }
 
@@ -177,6 +192,7 @@ a {
   color: var(--veridian);
   text-underline-offset: 3px;
 }
+
 a:hover {
   color: var(--veridian-strong);
 }
@@ -185,6 +201,7 @@ a:hover {
   width: min(1120px, calc(100% - 2rem));
   margin-inline: auto;
 }
+
 .page-wrap--wide {
   width: min(1280px, calc(100% - 2rem));
   margin-inline: auto;
@@ -196,6 +213,7 @@ a:hover {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
 .kicker {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.68rem;
@@ -204,11 +222,13 @@ a:hover {
   font-weight: 600;
   color: var(--ink-faint);
 }
+
 /* Technical — JetBrains Mono for labels, metadata, dates, stacks */
 .technical,
 .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
+
 .mono-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
@@ -226,6 +246,7 @@ a:hover {
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 8px 24px rgba(15, 23, 42, 0.04);
 }
+
 .card-flat:hover {
   border-color: var(--line-strong);
 }
@@ -237,6 +258,7 @@ a:hover {
   font-weight: 500;
   font-size: 0.875rem;
 }
+
 .nav-link:hover {
   color: var(--ink);
 }
@@ -246,6 +268,7 @@ a:hover {
   background: var(--sidebar);
   border-right: 1px solid var(--sidebar-border);
 }
+
 .sidebar-link {
   display: flex;
   align-items: center;
@@ -257,18 +280,22 @@ a:hover {
   font-size: 0.875rem;
   transition: all 150ms;
 }
+
 .sidebar-link:hover {
   background: var(--sidebar-accent);
   color: var(--sidebar-foreground);
 }
+
 .sidebar-link.is-active {
   background: var(--sidebar-primary);
   color: var(--sidebar-primary-foreground);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+
 .sidebar-link.is-active svg {
   color: var(--sidebar-primary-foreground);
 }
+
 .sidebar-kicker {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.62rem;
@@ -288,9 +315,11 @@ a:hover {
   font-size: 0.875rem;
   border: 1px solid var(--racing);
 }
+
 .btn-primary:hover {
   background: var(--racing-strong);
 }
+
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--line);
@@ -300,6 +329,7 @@ a:hover {
   font-size: 0.875rem;
   color: var(--ink);
 }
+
 .btn-ghost:hover {
   background: var(--surface-muted);
 }
@@ -314,11 +344,13 @@ a:hover {
 .rise {
   animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
 @keyframes rise {
   from {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -335,10 +367,25 @@ a:hover {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .rise {
+    animation: none !important;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     background: var(--background);
     color: var(--foreground);

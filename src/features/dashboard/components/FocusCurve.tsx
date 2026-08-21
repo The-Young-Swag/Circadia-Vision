@@ -47,14 +47,14 @@ export function FocusCurve({ buckets, pattern }: FocusCurveProps) {
         </div>
       )}
       {pattern && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <div className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
-            <Sparkles size={12} /> Insight
+        <div className="mt-4 rounded-xl border border-[var(--veridian)]/30 bg-[var(--veridian-muted)] p-3">
+          <div className="text-xs font-semibold text-[var(--ink)] flex items-center gap-1.5">
+            <Sparkles size={12} className="text-[var(--veridian)]" /> Insight
           </div>
-          <div className="text-sm font-medium text-amber-950 mt-1">
+          <div className="text-sm font-medium text-[var(--ink)] mt-1">
             {pattern.text}
           </div>
-          <div className="text-xs text-amber-800 mt-1">{pattern.stat}</div>
+          <div className="text-xs text-[var(--ink-soft)] mt-1">{pattern.stat}</div>
         </div>
       )}
     </div>

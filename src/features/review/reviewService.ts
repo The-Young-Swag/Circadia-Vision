@@ -1,17 +1,15 @@
-/**
- * Review service — React-independent domain orchestration.
- * Keeps SM-2, baseline, and persistence out of components (React 19 rule 11).
- */
 import type { Card } from '#/shared/lib/db/dexie'
-import { sm2  } from '#/shared/lib/sm2'
-import type {Grade} from '#/shared/lib/sm2';
-import { updateEwma, DEFAULT_ALPHA } from '#/shared/lib/baseline'
+import { sm2 } from '#/shared/lib/sm2'
+import type { Grade } from '#/shared/lib/sm2'
+import {
+  updateEwma,
+  DEFAULT_ALPHA,
+} from '#/shared/lib/baseline'
 import type { AggregatedFeatures } from '#/shared/lib/signals'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { sessionRepository } from '#/shared/repositories/sessionRepository'
 import { baselineRepository } from '#/shared/repositories/baselineRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
-import { db } from '#/shared/lib/db/dexie'
 import { GradeSchema } from '#/features/review/schemas'
 
 type GradeResult = {
@@ -21,15 +19,21 @@ type GradeResult = {
   nextDueDate: string
 }
 
+/**
+ * Calculate the next SM-2 state without touching persistence.
+ */
 export function calculateNextReview(
   card: Card,
   grade: Grade,
   now: Date = new Date(),
 ): GradeResult {
-  // Validate at domain boundary — Zod ensures grade is 0-3 (Guide §8, §9)
   const parsed = GradeSchema.safeParse(grade)
-  if (!parsed.success) throw new Error(`Invalid grade: ${grade}`)
-  const r = sm2(
+
+  if (!parsed.success) {
+    throw new Error(`Invalid grade: ${grade}`)
+  }
+
+  const result = sm2(
     {
       interval: card.interval,
       repetitions: card.repetitions,
@@ -38,14 +42,24 @@ export function calculateNextReview(
     parsed.data,
     now,
   )
+
   return {
-    nextInterval: r.interval,
-    nextRepetitions: r.repetitions,
-    nextEase: r.easeFactor,
-    nextDueDate: r.dueDate,
+    nextInterval: result.interval,
+    nextRepetitions: result.repetitions,
+    nextEase: result.easeFactor,
+    nextDueDate: result.dueDate,
   }
 }
 
+/**
+ * Persist one card review.
+ *
+ * durationMs currently means:
+ * "elapsed time since the beginning of the current study session
+ * when this review was recorded."
+ *
+ * It is intentionally not interpreted as an individual card duration.
+ */
 export async function persistGrade(params: {
   card: Card
   grade: Grade
@@ -54,7 +68,12 @@ export async function persistGrade(params: {
   live: AggregatedFeatures | null
 }): Promise<{ nextDueDate: string }> {
   const now = new Date()
-  const result = calculateNextReview(params.card, params.grade, now)
+
+  const result = calculateNextReview(
+    params.card,
+    params.grade,
+    now,
+  )
 
   await cardRepository.update(params.card.id, {
     interval: result.nextInterval,
@@ -70,62 +89,82 @@ export async function persistGrade(params: {
     sessionId: params.sessionId,
     timestamp: now.toISOString(),
     grade: params.grade,
-    durationMs: Date.now() - params.startedAt,
+    durationMs: Math.max(
+      0,
+      Date.now() - params.startedAt,
+    ),
   })
 
   if (params.live) {
-    const features: Array<[keyof AggregatedFeatures, number]> = [
-      ['interKeyLatency', params.live.interKeyLatency],
-      ['dwellTime', params.live.dwellTime],
-      ['correctionRate', params.live.correctionRate],
-      ['wpm', params.live.wpm],
-    ]
-    for (const [name, value] of features) {
-      const row = await baselineRepository.getByName(name)
-      if (!row) continue
-      const snap = {
+    await updateBaseline(params.live, now)
+  }
+
+  return {
+    nextDueDate: result.nextDueDate,
+  }
+}
+
+/**
+ * Update the user's local EWMA baseline from one live signal sample.
+ *
+ * This remains independent from calibration-session counting.
+ * A session can contain multiple signal samples.
+ */
+async function updateBaseline(
+  live: AggregatedFeatures,
+  now: Date,
+): Promise<void> {
+  const features: Array<
+    [keyof AggregatedFeatures, number]
+  > = [
+    ['interKeyLatency', live.interKeyLatency],
+    ['dwellTime', live.dwellTime],
+    ['correctionRate', live.correctionRate],
+    ['wpm', live.wpm],
+  ]
+
+  for (const [name, value] of features) {
+    const row = await baselineRepository.getByName(name)
+
+    if (!row) continue
+
+    const next = updateEwma(
+      {
         mean: row.mean,
         variance: row.variance,
         stddev: row.stddev,
         sampleCount: row.sampleCount,
-      }
-      const next = updateEwma(snap, value, DEFAULT_ALPHA)
-      await baselineRepository.upsert({
-        name: name,
-        mean: next.mean,
-        variance: next.variance,
-        stddev: next.stddev,
-        sampleCount: next.sampleCount,
-        lastUpdated: now.toISOString(),
-      })
-    }
-  }
+      },
+      value,
+      DEFAULT_ALPHA,
+    )
 
-  return { nextDueDate: result.nextDueDate }
+    await baselineRepository.upsert({
+      name,
+      mean: next.mean,
+      variance: next.variance,
+      stddev: next.stddev,
+      sampleCount: next.sampleCount,
+      lastUpdated: now.toISOString(),
+    })
+  }
 }
 
-export async function bumpCalibration(currentN: number): Promise<number> {
-  const nextN = currentN + 1
-  if (nextN <= 12) {
-    await settingsRepository.setCalibrationSessions(nextN)
-  }
+/**
+ * Mark ONE completed review session as one calibration session.
+ *
+ * Calibration is capped at five completed sessions because the
+ * product's cold-start model is 3–5 sessions.
+ */
+export async function completeCalibrationSession(
+  currentN: number,
+): Promise<number> {
+  const nextN = Math.min(
+    Math.max(currentN, 0) + 1,
+    5,
+  )
+
+  await settingsRepository.setCalibrationSessions(nextN)
+
   return nextN
-}
-
-export async function maybeCreateSessionInsight(params: {
-  queueLength: number
-  startedAt: number
-  minutesRefLength: number
-  breakRec: number | null
-}): Promise<void> {
-  if (params.queueLength < 8) return
-  const mins = Math.round((Date.now() - params.startedAt) / 60000)
-  await db.insights.add({
-    id: crypto.randomUUID().slice(0, 8),
-    statement: `Solid ${mins}-minute session — ${params.queueLength} cards`,
-    stat: `Rhythm samples: ${params.minutesRefLength} · Break rec: ${params.breakRec ?? 5}m`,
-    timestamp: new Date().toISOString(),
-    dismissed: false,
-    kind: 'general',
-  })
 }
