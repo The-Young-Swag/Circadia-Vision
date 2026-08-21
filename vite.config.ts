@@ -14,7 +14,7 @@ const config = defineConfig({
     tailwindcss(),
     tanstackStart({
       srcDirectory: 'src',
-      router: { generatedRouteTree: 'src/routeTree.gen.ts' },
+      router: { generatedRouteTree: 'routeTree.gen.ts' },
     }),
     viteReact(),
     VitePWA({
