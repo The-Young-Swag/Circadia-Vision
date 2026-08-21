@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { db, type Card } from '#/db/dexie'
-import { autoSegment, exportToJson, exportToMarkdown, parseJsonImport } from '#/lib/import'
+import { exportToJson, exportToMarkdown } from '#/lib/import'
 import { Search, Plus, Trash2, Pencil, Upload, Download, Filter, X } from 'lucide-react'
+import { CardDialog } from '#/components/library/CardDialog'
+import { ImportWizard } from '#/components/library/ImportWizard'
 
 export const Route = createFileRoute('/library')({ component: Library })
 
@@ -47,7 +49,7 @@ function Library() {
         </div>
         <div className="flex gap-2">
           <button className="btn-ghost inline-flex items-center gap-2" onClick={() => setShowImport(true)}>
-            <Upload size={16} /> Import
+            <Upload size={16} /> Add cards
           </button>
           <button className="btn-primary inline-flex items-center gap-2" onClick={() => setShowAdd(true)}>
             <Plus size={16} /> New card
@@ -61,7 +63,7 @@ function Library() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search front, back, topic, email-style…"
+            placeholder="Search questions, answers, or topics…"
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-[var(--ink-faint)]"
           />
           {q && (
@@ -170,147 +172,7 @@ function Library() {
 
       {showAdd && <CardDialog onClose={() => setShowAdd(false)} onSaved={refresh} />}
       {editing && <CardDialog card={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh() }} />}
-      {showImport && <ImportDialog onClose={() => setShowImport(false)} onImported={refresh} />}
-    </div>
-  )
-}
-
-function CardDialog({ card, onClose, onSaved }: { card?: Card; onClose: () => void; onSaved: () => void }) {
-  const [front, setFront] = useState(card?.front ?? '')
-  const [back, setBack] = useState(card?.back ?? '')
-  const [topic, setTopic] = useState(card?.topic ?? 'General')
-  const [targetDate, setTargetDate] = useState(card?.targetDate ?? '')
-
-  const save = async () => {
-    if (!front.trim() || !back.trim()) return
-    const now = new Date().toISOString()
-    const today = now.slice(0, 10)
-    if (card) {
-      await db.cards.update(card.id, { front: front.trim(), back: back.trim(), topic: topic.trim() || 'General', targetDate: targetDate || undefined })
-    } else {
-      await db.cards.add({
-        id: Math.random().toString(36).slice(2, 10),
-        front: front.trim(),
-        back: back.trim(),
-        topic: topic.trim() || 'General',
-        targetDate: targetDate || undefined,
-        createdAt: now,
-        interval: 0,
-        repetitions: 0,
-        easeFactor: 2.5,
-        dueDate: today,
-      })
-    }
-    onSaved()
-    onClose()
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
-      <div className="card-flat w-full max-w-[560px] p-6">
-        <h3 className="font-semibold">{card ? 'Edit card' : 'New card'}</h3>
-        <div className="grid gap-3 mt-4">
-          <label className="text-sm">
-            <span className="font-medium">Front</span>
-            <textarea value={front} onChange={(e) => setFront(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-sm outline-none focus:border-[var(--blue)]" placeholder="Question or prompt" />
-          </label>
-          <label className="text-sm">
-            <span className="font-medium">Back</span>
-            <textarea value={back} onChange={(e) => setBack(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-sm outline-none focus:border-[var(--blue)]" placeholder="Answer" />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="text-sm">
-              <span className="font-medium">Topic</span>
-              <input value={topic} onChange={(e) => setTopic(e.target.value)} className="mt-1 w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm outline-none" />
-            </label>
-            <label className="text-sm">
-              <span className="font-medium">Target date</span>
-              <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="mt-1 w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm outline-none" />
-            </label>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 mt-6">
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={save}>Save</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ImportDialog({ onClose, onImported }: { onClose: () => void; onImported: () => void }) {
-  const [text, setText] = useState('')
-  const [warnings, setWarnings] = useState<string[]>([])
-  const [preview, setPreview] = useState<ReturnType<typeof autoSegment>['cards']>([])
-
-  const runPreview = () => {
-    const r = text.trim().startsWith('{') || text.trim().startsWith('[') ? parseJsonImport(text) : autoSegment(text)
-    setPreview(r.cards)
-    setWarnings(r.warnings)
-  }
-
-  const doImport = async () => {
-    const r = text.trim().startsWith('{') || text.trim().startsWith('[') ? parseJsonImport(text) : autoSegment(text)
-    const today = new Date().toISOString().slice(0, 10)
-    const now = new Date().toISOString()
-    const toAdd = r.cards.map((c) => ({
-      id: Math.random().toString(36).slice(2, 10),
-      front: c.front,
-      back: c.back,
-      topic: c.topic,
-      createdAt: now,
-      interval: 0,
-      repetitions: 0,
-      easeFactor: 2.5,
-      dueDate: today,
-    }))
-    if (toAdd.length) await db.cards.bulkAdd(toAdd as Card[])
-    onImported()
-    onClose()
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
-      <div className="card-flat w-full max-w-[760px] max-h-[90vh] overflow-auto p-6">
-        <h3 className="font-semibold">Import — paste text, markdown, or JSON</h3>
-        <p className="text-sm text-[var(--ink-soft)] mt-1">Headers become topics. Bullets, Q/A pairs, and :: delimiters are auto-segmented. Edit before saving.</p>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={10}
-          className="mt-4 w-full rounded-xl border border-[var(--line)] bg-[var(--surface-muted)] p-3 text-sm font-mono outline-none focus:border-[var(--blue)]"
-          placeholder={`## Anatomy\nQ: What is ...?\nA: ...\n\n- Starling's law :: Stroke volume ...\n- Brachial plexus :: C5–T1\n\nOr paste JSON: {"cards":[{"front":"...","back":"...","topic":"..."}]}`}
-        />
-        <div className="flex gap-2 mt-3">
-          <button className="btn-ghost" onClick={runPreview}>Preview</button>
-          <button className="btn-primary" onClick={doImport} disabled={!text.trim()}>
-            Import {preview.length ? `(${preview.length})` : ''}
-          </button>
-          <button className="btn-ghost ml-auto" onClick={onClose}>Close</button>
-        </div>
-        {warnings.length > 0 && (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-            {warnings.map((w) => (
-              <div key={w}>• {w}</div>
-            ))}
-          </div>
-        )}
-        {preview.length > 0 && (
-          <div className="mt-4 border-t border-[var(--line)] pt-4">
-            <div className="text-sm font-medium mb-2">Preview — {preview.length} cards</div>
-            <div className="grid gap-2 max-h-[260px] overflow-auto pr-1">
-              {preview.slice(0, 20).map((c, i) => (
-                <div key={i} className="rounded-xl border border-[var(--line)] bg-white p-3 text-sm">
-                  <div className="font-medium">{c.front}</div>
-                  <div className="text-[var(--ink-soft)]">{c.back}</div>
-                  <div className="text-xs text-[var(--ink-faint)] mt-1">{c.topic}</div>
-                </div>
-              ))}
-              {preview.length > 20 && <div className="text-xs text-[var(--ink-faint)]">…and {preview.length - 20} more</div>}
-            </div>
-          </div>
-        )}
-      </div>
+      {showImport && <ImportWizard onClose={() => setShowImport(false)} onImported={refresh} />}
     </div>
   )
 }
