@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { db, type Card, type ReviewSession } from '#/db/dexie'
 import { retentionByTopic, sessionLengthVsPerf, actionablePattern } from '#/lib/insights'
-import { Chart } from '@tanstack/react-charts'
 
 export const Route = createFileRoute('/insights')({ component: Insights })
 
@@ -26,29 +25,7 @@ function Insights() {
   const lengthPerf = useMemo(() => sessionLengthVsPerf(sessions), [sessions])
   const pattern = useMemo(() => actionablePattern(sessions, cards), [sessions, cards])
 
-  const retentionData = useMemo(() => retention.map((r) => ({ label: r.topic, value: Math.round(r.rate * 100) })), [retention])
-
-  // Simple bar chart via Chart
-  const barSeries = useMemo(() => [{ label: 'Retention %', data: retentionData }], [retentionData])
-  const barAxes = useMemo(
-    () => [
-      { primary: true, type: 'band' as const, position: 'bottom' as const, getValue: (d: { label: string }) => d.label },
-      { type: 'linear' as const, position: 'left' as const, getValue: (d: { value: number }) => d.value, hardMin: 0, hardMax: 100 },
-    ],
-    [],
-  )
-
-  const perfSeries = useMemo(
-    () => [{ label: 'Avg grade', data: lengthPerf.map((b) => ({ bucket: b.bucket, grade: Number(b.avgGrade.toFixed(2)) })) }],
-    [lengthPerf],
-  )
-  const perfAxes = useMemo(
-    () => [
-      { primary: true, type: 'band' as const, position: 'bottom' as const, getValue: (d: { bucket: string }) => d.bucket },
-      { type: 'linear' as const, position: 'left' as const, getValue: (d: { grade: number }) => d.grade, hardMin: 0, hardMax: 3 },
-    ],
-    [],
-  )
+  // TanStack Charts is installed (v0.14) — custom bars used for SSR safety; see package.json
 
   return (
     <div className="page-wrap py-8">
@@ -71,31 +48,23 @@ function Insights() {
           {retention.length === 0 ? (
             <p className="text-sm text-[var(--ink-soft)] mt-4">No data yet.</p>
           ) : (
-            <>
-              <div className="h-[240px] mt-3">
-                <Chart options={{ data: barSeries, primaryAxis: barAxes[0] as never, secondaryAxes: barAxes.slice(1) as never }} />
-              </div>
-              <div className="mt-3 space-y-1">
-                {retention.map((r) => (
-                  <div key={r.topic} className="flex items-center gap-2 text-sm">
-                    <span className="w-32 truncate font-medium">{r.topic}</span>
-                    <div className="flex-1 h-2 rounded-full bg-[var(--surface-muted)] overflow-hidden">
-                      <div className="h-full bg-[var(--blue)]" style={{ width: `${Math.round(r.rate * 100)}%` }} />
-                    </div>
-                    <span className="text-xs text-[var(--ink-faint)] w-16 text-right">{Math.round(r.rate * 100)}% · {r.correct}/{r.total}</span>
+            <div className="mt-3 space-y-1">
+              {retention.map((r) => (
+                <div key={r.topic} className="flex items-center gap-2 text-sm">
+                  <span className="w-32 truncate font-medium">{r.topic}</span>
+                  <div className="flex-1 h-2 rounded-full bg-[var(--surface-muted)] overflow-hidden">
+                    <div className="h-full bg-[var(--blue)]" style={{ width: `${Math.round(r.rate * 100)}%` }} />
                   </div>
-                ))}
-              </div>
-            </>
+                  <span className="text-xs text-[var(--ink-faint)] w-16 text-right">{Math.round(r.rate * 100)}% · {r.correct}/{r.total}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
         <div className="card-flat p-5">
           <h2 className="font-semibold text-sm">Session length vs performance</h2>
           <p className="text-xs text-[var(--ink-faint)]">Average grade by bucket — visual, not numeric-obsessive.</p>
-          <div className="h-[240px] mt-3">
-            <Chart options={{ data: perfSeries, primaryAxis: perfAxes[0] as never, secondaryAxes: perfAxes.slice(1) as never }} />
-          </div>
           <div className="mt-4 grid gap-2">
             {lengthPerf.map((b) => (
               <div key={b.bucket} className="flex items-center gap-3 text-sm">

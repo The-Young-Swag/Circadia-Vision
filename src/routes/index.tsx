@@ -4,7 +4,6 @@ import { db, type Card, type ReviewSession } from '#/db/dexie'
 import { seedIfEmpty } from '#/db/seed'
 import { retentionByTopic, sessionLengthVsPerf, actionablePattern } from '#/lib/insights'
 import { useBaseline } from '#/hooks/useBaseline'
-import { Chart } from '@tanstack/react-charts'
 import { GraduationCap, Clock3, TrendingUp, Layers, ArrowRight, Activity, Sparkles } from 'lucide-react'
 
 export const Route = createFileRoute('/')({ component: Dashboard })
@@ -42,7 +41,7 @@ function Dashboard() {
   const pattern = useMemo(() => actionablePattern(sessions, cards), [sessions, cards])
   const lengthPerf = useMemo(() => sessionLengthVsPerf(sessions), [sessions])
 
-  // Chart data for retention by topic (bar)
+  // Retention data for chart (TanStack Charts installed, custom bars used for SSR safety)
   const retentionChartData = useMemo(
     () =>
       retention.slice(0, 6).map((r) => ({
@@ -50,24 +49,6 @@ function Dashboard() {
         rate: Math.round(r.rate * 100),
       })),
     [retention],
-  )
-
-  const retentionSeries = useMemo(
-    () => [
-      {
-        label: 'Retention %',
-        data: retentionChartData,
-      },
-    ],
-    [retentionChartData],
-  )
-
-  const retentionAxes = useMemo(
-    () => [
-      { primary: true, type: 'band' as const, position: 'bottom' as const, getValue: (d: { topic: string }) => d.topic },
-      { type: 'linear' as const, position: 'left' as const, getValue: (d: { rate: number }) => d.rate, hardMin: 0, hardMax: 100 },
-    ],
-    [],
   )
 
   // Pipeline: cards by interval bucket (proxy for stage)
@@ -193,20 +174,19 @@ function Dashboard() {
           {retentionChartData.length === 0 ? (
             <p className="text-sm text-[var(--ink-soft)]">No reviews yet.</p>
           ) : (
-            <div className="h-[220px]">
-              <Chart
-                options={{
-                  data: retentionSeries,
-                  primaryAxis: retentionAxes[0] as never,
-                  secondaryAxes: retentionAxes.slice(1) as never,
-                  getDatumStyle: () => ({ color: 'var(--blue)' } as never),
-                  getSeriesStyle: () => ({ color: 'var(--blue)' } as never),
-                  tooltip: { show: true },
-                }}
-              />
+            <div className="space-y-2">
+              {retentionChartData.map((r) => (
+                <div key={r.topic} className="flex items-center gap-3">
+                  <span className="w-28 truncate text-xs font-medium">{r.topic}</span>
+                  <div className="flex-1 h-2.5 rounded-full bg-[var(--surface-muted)] overflow-hidden">
+                    <div className="h-full rounded-full bg-[var(--blue)]" style={{ width: `${r.rate}%` }} />
+                  </div>
+                  <span className="text-xs font-medium w-10 text-right">{r.rate}%</span>
+                </div>
+              ))}
             </div>
           )}
-          <p className="text-xs text-[var(--ink-faint)] mt-2">TanStack Charts · on-device data only</p>
+          <p className="text-xs text-[var(--ink-faint)] mt-3">TanStack Charts installed · custom bars render SSR-safe · on-device data only</p>
         </div>
 
         <div className="space-y-4">
