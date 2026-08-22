@@ -5,6 +5,8 @@ import {
     useState,
   } from 'react'
 
+  import { cardRepository } from '#/shared/repositories/cardRepository'
+
   import { Keyboard, Pause } from 'lucide-react'
 
   import type { Card } from '#/shared/types/domain'
@@ -22,12 +24,9 @@ import {
     recommendBreakMinutes,
   } from '#/shared/lib/baseline'
 
-  import {
-    completeCalibrationSession,
-    loadReviewData,
-    persistSignal,
-    refreshReviewCards,
-  } from '#/features/review/reviewService'
+  import { completeCalibration } from '#/features/review/application/completeCalibration'
+  import { loadReview } from '#/features/review/application/loadReview'
+  import { saveSignal } from '#/features/review/application/saveSignal'
 
 
   import { useBaseline } from '#/shared/hooks/useBaseline'
@@ -110,7 +109,7 @@ import {
           cards: loadedCards,
           adaptiveOptIn,
           calibrationSessions,
-        } = await loadReviewData()
+        } = await loadReview()
 
         setCards(loadedCards)
         setOptIn(adaptiveOptIn)
@@ -136,7 +135,7 @@ import {
         minutesRef.current.shift()
       }
 
-      void persistSignal({
+      void saveSignal({
         id: crypto.randomUUID().slice(0, 8),
         sessionId: sessionIdRef.current,
         minuteIndex: minutesRef.current.length - 1,
@@ -216,9 +215,9 @@ import {
 
           if (calibrationN < 5) {
             const nextCalibrationN =
-              await completeCalibrationSession(
-                calibrationN,
-              )
+            await completeCalibration(
+              calibrationN,
+            )
 
             setCalibrationN(nextCalibrationN)
           }
@@ -228,7 +227,7 @@ import {
         }
 
         const refreshedCards =
-        await refreshReviewCards()
+          await cardRepository.findAll()
 
         setCards(refreshedCards)
       },
