@@ -11,8 +11,10 @@ import type {
 } from '#/shared/types/domain'
 
 import { seedIfEmpty } from '#/shared/lib/db/seed'
-import { db } from '#/shared/lib/db/dexie'
 
+import { cardRepository } from '#/shared/repositories/cardRepository'
+import { sessionRepository } from '#/shared/repositories/sessionRepository'
+import { signalRepository } from '#/shared/repositories/signalRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
 
 type DashboardData = {
@@ -55,20 +57,16 @@ export function useDashboardData() {
               signals,
               optIn,
             ] = await Promise.all([
-              db.cards.toArray(),
-              db.reviewSessions.toArray(),
-              db.sessionSignals
-                .orderBy('timestamp')
-                .reverse()
-                .limit(100)
-                .toArray(),
+              cardRepository.findAll(),
+              sessionRepository.findAll(),
+              signalRepository.findRecent(100),
               settingsRepository.getAdaptiveOptIn(),
             ])
 
             return {
               cards,
               sessions,
-              signals: signals.reverse(),
+              signals,
               optIn,
             }
           },
