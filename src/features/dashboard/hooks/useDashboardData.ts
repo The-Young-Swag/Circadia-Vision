@@ -1,8 +1,8 @@
 import {
-  useCallback,
   useEffect,
   useState,
 } from 'react'
+import { liveQuery } from 'dexie'
 
 import type {
   Card,
@@ -11,47 +11,30 @@ import type {
 } from '#/shared/types/domain'
 
 import { seedIfEmpty } from '#/shared/lib/db/seed'
+import { db } from '#/shared/lib/db/dexie'
 
-import { cardRepository } from '#/shared/repositories/cardRepository'
-import { sessionRepository } from '#/shared/repositories/sessionRepository'
-import { signalRepository } from '#/shared/repositories/signalRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
 
+type DashboardData = {
+  cards: Card[]
+  sessions: ReviewSession[]
+  signals: SessionSignal[]
+  optIn: boolean | null
+}
+
+const EMPTY_DATA: DashboardData = {
+  cards: [],
+  sessions: [],
+  signals: [],
+  optIn: null,
+}
+
 export function useDashboardData() {
-  const [cards, setCards] =
-    useState<Card[]>([])
-
-  const [sessions, setSessions] =
-    useState<ReviewSession[]>([])
-
-  const [signals, setSignals] =
-    useState<SessionSignal[]>([])
+  const [data, setData] =
+    useState<DashboardData>(EMPTY_DATA)
 
   const [ready, setReady] =
     useState(false)
-
-  const [optIn, setOptIn] =
-    useState<boolean | null>(null)
-
-  const refresh =
-    useCallback(async () => {
-      const [
-        nextCards,
-        nextSessions,
-        nextSignals,
-        adaptiveOptIn,
-      ] = await Promise.all([
-        cardRepository.findAll(),
-        sessionRepository.findAll(),
-        signalRepository.findRecent(100),
-        settingsRepository.getAdaptiveOptIn(),
-      ])
-
-      setCards(nextCards)
-      setSessions(nextSessions)
-      setSignals(nextSignals)
-      setOptIn(adaptiveOptIn)
-    }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -60,12 +43,70 @@ export function useDashboardData() {
       try {
         await seedIfEmpty()
 
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
-        await refresh()
+        const observable = liveQuery(
+          async (): Promise<DashboardData> => {
+            const [
+              cards,
+              sessions,
+              signals,
+              optIn,
+            ] = await Promise.all([
+              db.cards.toArray(),
+              db.reviewSessions.toArray(),
+              db.sessionSignals
+                .orderBy('timestamp')
+                .reverse()
+                .limit(100)
+                .toArray(),
+              settingsRepository.getAdaptiveOptIn(),
+            ])
 
-        setReady(true)
+            return {
+              cards,
+              sessions,
+              signals: signals.reverse(),
+              optIn,
+            }
+          },
+        )
+
+        const subscription =
+          observable.subscribe({
+            next: (nextData) => {
+              if (cancelled) {
+                return
+              }
+
+              setData(nextData)
+              setReady(true)
+            },
+
+            error: (error) => {
+              if (cancelled) {
+                return
+              }
+
+              console.error(
+                'Failed to observe dashboard data:',
+                error,
+              )
+
+              setReady(true)
+            },
+          })
+
+        return () => {
+          subscription.unsubscribe()
+        }
       } catch (error) {
+        if (cancelled) {
+          return
+        }
+
         console.error(
           'Failed to initialize dashboard data:',
           error,
@@ -75,40 +116,36 @@ export function useDashboardData() {
       }
     }
 
-    void initialize()
+    let cleanup:
+      | (() => void)
+      | undefined
 
-    const intervalId =
-      window.setInterval(() => {
-        if (!cancelled) {
-          void refresh()
-        }
-      }, 2000)
+    void initialize().then(
+      (unsubscribe) => {
+        cleanup = unsubscribe
+      },
+    )
 
     return () => {
       cancelled = true
-      window.clearInterval(
-        intervalId,
-      )
+      cleanup?.()
     }
-  }, [refresh])
+  }, [])
 
-  const setOptInAndPersist =
-    async (value: boolean) => {
-      await settingsRepository.setAdaptiveOptIn(
-        value,
-      )
-
-      setOptIn(value)
-    }
+  const setOptIn = async (
+    value: boolean,
+  ) => {
+    await settingsRepository.setAdaptiveOptIn(
+      value,
+    )
+  }
 
   return {
-    cards,
-    sessions,
-    signals,
+    cards: data.cards,
+    sessions: data.sessions,
+    signals: data.signals,
     ready,
-    optIn,
-    setOptIn:
-      setOptInAndPersist,
-    refresh,
+    optIn: data.optIn,
+    setOptIn,
   }
 }
