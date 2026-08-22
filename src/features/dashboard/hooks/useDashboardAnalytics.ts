@@ -22,6 +22,13 @@ import type {
   SessionSignal,
 } from '#/shared/types/domain'
 
+export type RecentActivityItem = {
+  id: string
+  cardFront: string
+  timestamp: string
+  grade: number
+}
+
 type DashboardAnalyticsInput = {
   cards: Card[]
   sessions: ReviewSession[]
@@ -66,15 +73,24 @@ export function useDashboardAnalytics({
       const hour = new Date(signal.timestamp).getHours()
 
       const latency = Math.abs(
-        zScore(signal.interKeyLatency, baseline.interKeyLatency),
+        zScore(
+          signal.interKeyLatency,
+          baseline.interKeyLatency,
+        ),
       )
 
       const dwell = Math.abs(
-        zScore(signal.dwellTime, baseline.dwellTime),
+        zScore(
+          signal.dwellTime,
+          baseline.dwellTime,
+        ),
       )
 
       const correction = Math.abs(
-        zScore(signal.correctionRate, baseline.correctionRate),
+        zScore(
+          signal.correctionRate,
+          baseline.correctionRate,
+        ),
       )
 
       const wpm = Math.abs(
@@ -94,7 +110,9 @@ export function useDashboardAnalytics({
   }, [signals, baseline, hasBaseline])
 
   const dueToday = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10)
 
     return cards.filter(
       (card) => card.dueDate <= today,
@@ -129,6 +147,25 @@ export function useDashboardAnalytics({
     [sessions],
   )
 
+  const recentActivity = useMemo<RecentActivityItem[]>(
+    () =>
+      [...sessions]
+        .sort((a, b) =>
+          b.timestamp.localeCompare(a.timestamp),
+        )
+        .slice(0, 6)
+        .map((session) => ({
+          id: session.id,
+          cardFront:
+            cards.find(
+              (card) => card.id === session.cardId,
+            )?.front ?? 'Card',
+          timestamp: session.timestamp,
+          grade: session.grade,
+        })),
+    [sessions, cards],
+  )
+
   const summaries = useMemo(
     () => sessionSummaries(sessions),
     [sessions],
@@ -152,8 +189,9 @@ export function useDashboardAnalytics({
       summaries
         .filter(
           (session) =>
-            new Date(session.startedAt).getTime() >=
-            weekAgo,
+            new Date(
+              session.startedAt,
+            ).getTime() >= weekAgo,
         )
         .reduce(
           (total, session) =>
@@ -221,6 +259,7 @@ export function useDashboardAnalytics({
     retention,
     pattern,
     sessionCount,
+    recentActivity,
     summaries,
     retentionComparison,
     studyMinutesThisWeek,

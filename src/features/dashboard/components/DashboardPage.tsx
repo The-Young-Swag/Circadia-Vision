@@ -51,6 +51,7 @@ export function DashboardPage() {
     newCards,
     pattern,
     sessionCount,
+    recentActivity,
     retentionChartData,
     studyMinutesThisWeek,
     recentReviewCount,
@@ -371,8 +372,7 @@ export function DashboardPage() {
 
         <div className="space-y-4">
           <RecentActivity
-            sessions={sessions}
-            cards={cards}
+            items={recentActivity}
           />
 
           <UpcomingDue
@@ -541,8 +541,7 @@ function RhythmSparkline({
     )
 
     return (
-      (latency + dwell + correction + wpm) /
-      4
+      (latency + dwell + correction + wpm) / 4
     )
   })
 
