@@ -1,56 +1,35 @@
 import { Link } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import {
-  useEffect,
-  useMemo,
-} from 'react'
-
-import {
-  retentionByTopic,
-  actionablePattern,
-  retentionPeriodComparison,
-  sessionSummaries,
-} from '#/shared/lib/insights'
-
-import { useBaseline } from '#/shared/hooks/useBaseline'
-import { useDashboardData } from '#/features/dashboard/hooks/useDashboardData'
-
-import { StatCard } from '#/features/dashboard/components/StatCard'
-import { RetentionBars } from '#/features/dashboard/components/RetentionBars'
-import { RecentActivity } from '#/features/dashboard/components/RecentActivity'
-import { UpcomingDue } from '#/features/dashboard/components/UpcomingDue'
-
-import {
-  Clock3,
-  TrendingUp,
-  Layers,
   Activity,
+  Clock3,
   GraduationCap,
+  Layers,
   Leaf,
+  TrendingUp,
 } from 'lucide-react'
 
+import { useBaseline } from '#/shared/hooks/useBaseline'
 import {
   gainFrameDue,
   ownershipCue,
 } from '#/shared/lib/engagement-copy'
-
-import {
-  classifyLearningState,
-} from '#/features/learning-state/domain/classifyState'
-
 import {
   trackCalibrationAttempt,
   trackCalibrationCompletion,
 } from '#/shared/lib/metrics'
-
-import {
-  MIN_SAMPLES_FOR_BASELINE,
-  peakWindow,
-  zScore,
-} from '#/shared/lib/baseline'
-
 import type { BaselineMap } from '#/shared/lib/baseline'
+import { zScore } from '#/shared/lib/baseline'
 
-export function HomeDashboard() {
+import { useDashboardAnalytics } from '#/features/dashboard/hooks/useDashboardAnalytics'
+import { useDashboardData } from '#/features/dashboard/hooks/useDashboardData'
+
+import { RecentActivity } from '#/features/dashboard/components/RecentActivity'
+import { RetentionBars } from '#/features/dashboard/components/RetentionBars'
+import { StatCard } from '#/features/dashboard/components/StatCard'
+import { UpcomingDue } from '#/features/dashboard/components/UpcomingDue'
+
+export function DashboardPage() {
   const {
     cards,
     sessions,
@@ -60,237 +39,34 @@ export function HomeDashboard() {
     setOptIn,
   } = useDashboardData()
 
-  const recentSignals =
-  useMemo(
-    () =>
-      [...signals]
-        .sort(
-          (a, b) =>
-            new Date(
-              a.timestamp,
-            ).getTime() -
-            new Date(
-              b.timestamp,
-            ).getTime(),
-        )
-        .map(
-          (signal) => ({
-            interKeyLatency:
-              signal.interKeyLatency,
-            dwellTime:
-              signal.dwellTime,
-            correctionRate:
-              signal.correctionRate,
-            wpm: signal.wpm,
-          }),
-        )
-        .slice(-12),
-    [signals],
-  )
-
   const {
     baseline,
     hasBaseline,
   } = useBaseline()
 
-  /**
-   * Find the hour with the lowest observed average deviation
-   * from the user's own baseline. An hour is only considered
-   * when it has enough real observations.
-   */
-  const peakLearningHour = useMemo(() => {
-    if (!hasBaseline || signals.length === 0) {
-      return null
-    }
-
-    const hourStats = new Map<number, number[]>()
-
-    for (const signal of signals) {
-      const hour = new Date(signal.timestamp).getHours()
-
-      const latency = Math.abs(
-        zScore(signal.interKeyLatency, baseline.interKeyLatency),
-      )
-      const dwell = Math.abs(
-        zScore(signal.dwellTime, baseline.dwellTime),
-      )
-      const correction = Math.abs(
-        zScore(signal.correctionRate, baseline.correctionRate),
-      )
-      const wpm = Math.abs(
-        zScore(signal.wpm, baseline.wpm),
-      )
-
-      const deviation =
-        (latency + dwell + correction + wpm) / 4
-
-      const values = hourStats.get(hour) ?? []
-      values.push(deviation)
-      hourStats.set(hour, values)
-    }
-
-    return peakWindow(hourStats)
-  }, [signals, baseline, hasBaseline])
-
-  /**
-   * Cards due today.
-   */
-  const dueToday = useMemo(() => {
-    const today =
-      new Date()
-        .toISOString()
-        .slice(0, 10)
-
-    return cards.filter(
-      (card) =>
-        card.dueDate <= today,
-    )
-  }, [cards])
-
-  /**
-   * New cards are cards that have never been reviewed.
-   *
-   * This is a CURRENT queue property, not a historical
-   * property. We only use it for today's queue composition.
-   */
-  const newCards = useMemo(
-    () =>
-      cards.filter(
-        (card) =>
-          card.repetitions === 0,
-      ),
-    [cards],
-  )
-
-  /**
-   * Topic retention.
-   */
-  const retention = useMemo(
-    () =>
-      retentionByTopic(
-        cards,
-        sessions,
-      ),
-    [cards, sessions],
-  )
-
-  /**
-   * One evidence-based personal pattern.
-   */
-  const pattern = useMemo(
-    () =>
-      actionablePattern(
-        sessions,
-        cards,
-      ),
-    [sessions, cards],
-  )
-
-  /**
-   * Actual session count.
-   */
-  const sessionCount = useMemo(
-    () =>
-      new Set(
-        sessions.map(
-          (session) =>
-            session.sessionId,
-        ),
-      ).size,
-    [sessions],
-  )
-
-  /**
-   * Session summaries are used for real study-time
-   * calculations instead of arbitrary dashboard numbers.
-   */
-  const summaries = useMemo(
-    () =>
-      sessionSummaries(
-        sessions,
-      ),
-    [sessions],
-  )
-
-  /**
-   * Retention comparison:
-   * current 7 days vs previous 7 days.
-   *
-   * No comparison is shown when there is insufficient
-   * historical data.
-   */
-  const retentionComparison =
-    useMemo(
-      () =>
-        retentionPeriodComparison(
-          sessions,
-          7,
-        ),
-      [sessions],
-    )
-
-  /**
-   * Study time over the last 7 days.
-   */
-  const studyMinutesThisWeek =
-    useMemo(() => {
-      const weekAgo =
-        Date.now() -
-        7 *
-          24 *
-          60 *
-          60 *
-          1000
-
-      return Math.round(
-        summaries
-          .filter(
-            (session) =>
-              new Date(
-                session.startedAt,
-              ).getTime() >=
-              weekAgo,
-          )
-          .reduce(
-            (
-              total,
-              session,
-            ) =>
-              total +
-              session.durationMinutes,
-            0,
-          ),
-      )
-    }, [summaries])
-
-  /**
-   * Real recent review samples.
-   *
-   * We intentionally do not pretend these are timing-signal
-   * observations. Review history can still support retention
-   * and session-level analytics.
-   */
-  const recentReviewCount =
-    retentionComparison.currentReviews
-
-  /**
-   * Learning state derived only from real timing observations.
-   */
-  const learningState =
-  classifyLearningState({
+  const {
+    recentSignals,
+    peakLearningHour,
+    dueToday,
+    newCards,
+    pattern,
+    sessionCount,
+    retentionChartData,
+    studyMinutesThisWeek,
+    recentReviewCount,
+    learningState,
+    isCalibrating,
+    recallValue,
+    recallHint,
+    calibrationProgress,
+  } = useDashboardAnalytics({
+    cards,
+    sessions,
+    signals,
     baseline,
-    recent: recentSignals,
+    hasBaseline,
   })
 
-  const isCalibrating =
-    !hasBaseline
-
-  /**
-   * Calibration analytics.
-   *
-   * This is tracking the current state, not inventing
-   * a historical number.
-   */
   useEffect(() => {
     if (isCalibrating) {
       void trackCalibrationAttempt()
@@ -298,65 +74,6 @@ export function HomeDashboard() {
       void trackCalibrationCompletion()
     }
   }, [isCalibrating])
-
-  /**
-   * Topic chart.
-   */
-  const retentionChartData =
-    useMemo(
-      () =>
-        retention
-          .slice(0, 6)
-          .map(
-            (item) => ({
-              topic: item.topic,
-              rate: Math.round(
-                item.rate * 100,
-              ),
-            }),
-          ),
-      [retention],
-    )
-
-  /**
-   * Honest retention display.
-   */
-  const recallValue =
-    retentionComparison.current ===
-    null
-      ? '—'
-      : `${Math.round(
-          retentionComparison.current *
-            100,
-        )}%`
-
-  const recallHint =
-    retentionComparison.delta ===
-    null
-      ? 'More history needed for delta'
-      : `${formatSignedPoints(
-          retentionComparison.delta,
-        )} vs previous 7 days`
-
-  /**
-   * Calibration progress is based on the least-observed
-   * baseline feature. This matches hasBaseline(), which
-   * requires every feature to reach the minimum sample count.
-   */
-  const calibrationProgress = useMemo(() => {
-    const counts = Object.values(baseline).map(
-      (snapshot) => snapshot.sampleCount,
-    )
-
-    if (counts.length === 0) {
-      return 0
-    }
-
-    return Math.min(
-      MIN_SAMPLES_FOR_BASELINE,
-      Math.min(...counts),
-    )
-  }, [baseline])
 
   if (!ready) {
     return (
@@ -368,7 +85,6 @@ export function HomeDashboard() {
 
   return (
     <div className="page-wrap py-6 md:py-8 space-y-6">
-      {/* Adaptive opt-in */}
       {optIn === null && (
         <section className="card-flat p-5 flex flex-col md:flex-row md:items-center gap-4 border-(--veridian)/20">
           <div className="flex-1">
@@ -411,7 +127,6 @@ export function HomeDashboard() {
         </section>
       )}
 
-      {/* 1. What should I do? */}
       <section className="card-flat p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -427,9 +142,7 @@ export function HomeDashboard() {
             </span>
 
             <span className="text-xs text-(--ink-faint) font-mono">
-              • {ownershipCue(
-                sessionCount,
-              )}
+              — {ownershipCue(sessionCount)}
             </span>
           </div>
 
@@ -455,14 +168,11 @@ export function HomeDashboard() {
           </Link>
 
           <span className="text-xs text-(--ink-faint) text-center font-mono">
-            {gainFrameDue(
-              dueToday.length,
-            )}
+            {gainFrameDue(dueToday.length)}
           </span>
         </div>
       </section>
 
-      {/* Calibration */}
       {isCalibrating && (
         <section className="card-flat p-4 flex items-center gap-3 border-(--veridian)/20 bg-(--veridian-muted)">
           <span className="h-8 w-8 rounded-full bg-(--veridian) text-white grid place-items-center font-mono text-xs">
@@ -480,9 +190,7 @@ export function HomeDashboard() {
                 className="h-full bg-(--veridian)"
                 style={{
                   width: `${
-                    (calibrationProgress /
-                      5) *
-                    100
+                    (calibrationProgress / 5) * 100
                   }%`,
                 }}
               />
@@ -491,7 +199,6 @@ export function HomeDashboard() {
         </section>
       )}
 
-      {/* 2. Today, briefly */}
       <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard
           icon={<Clock3 size={16} />}
@@ -503,9 +210,7 @@ export function HomeDashboard() {
         <StatCard
           icon={<Layers size={16} />}
           label="Reviews"
-          value={String(
-            recentReviewCount,
-          )}
+          value={String(recentReviewCount)}
           hint="Last 7 days"
         />
 
@@ -519,14 +224,10 @@ export function HomeDashboard() {
         <StatCard
           icon={<Activity size={16} />}
           label="Cards due"
-          value={String(
-            dueToday.length,
-          )}
+          value={String(dueToday.length)}
           hint={
             dueToday.length > 0
-              ? gainFrameDue(
-                  dueToday.length,
-                )
+              ? gainFrameDue(dueToday.length)
               : 'Nothing waiting'
           }
         />
@@ -555,7 +256,6 @@ export function HomeDashboard() {
         </div>
       </section>
 
-      {/* 3. One personal insight */}
       {pattern && (
         <section className="card-flat p-5 flex flex-col md:flex-row md:items-center gap-4 bg-(--surface-raised)">
           <div className="flex-1">
@@ -586,7 +286,6 @@ export function HomeDashboard() {
         </section>
       )}
 
-      {/* 4. Personal rhythm */}
       <section className="grid lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 card-flat p-5">
           <div className="flex items-center justify-between mb-3">
@@ -638,6 +337,7 @@ export function HomeDashboard() {
                 <div className="display text-2xl">
                   {formatHour(peakLearningHour)}
                 </div>
+
                 <p className="text-xs text-(--ink-faint) mt-1">
                   Lowest observed deviation from your personal
                   baseline.
@@ -648,7 +348,6 @@ export function HomeDashboard() {
         </div>
       </section>
 
-      {/* 5. Topic overview */}
       <section className="grid lg:grid-cols-3 gap-4">
         <div className="card-flat p-5 lg:col-span-2">
           <h2 className="font-semibold text-sm">
@@ -662,9 +361,7 @@ export function HomeDashboard() {
           <div className="mt-3">
             {retentionChartData.length > 0 ? (
               <RetentionBars
-                data={
-                  retentionChartData
-                }
+                data={retentionChartData}
               />
             ) : (
               <EmptyTopicState />
@@ -680,9 +377,7 @@ export function HomeDashboard() {
 
           <UpcomingDue
             dueToday={dueToday}
-            newCount={
-              newCards.length
-            }
+            newCount={newCards.length}
           />
         </div>
       </section>
@@ -702,9 +397,7 @@ export function HomeDashboard() {
   )
 }
 
-function stateDot(
-  state: string,
-): string {
+function stateDot(state: string): string {
   switch (state) {
     case 'Sharp':
       return 'bg-(--emerald)'
@@ -739,9 +432,7 @@ function headlineForState(
     return 'Your rhythm is returning toward baseline'
   }
 
-  if (
-    state === 'Insufficient Signal'
-  ) {
+  if (state === 'Insufficient Signal') {
     return due > 0
       ? 'A focused review is ready when you are'
       : 'You’re all caught up — ready when you are'
@@ -750,16 +441,6 @@ function headlineForState(
   return due > 0
     ? 'A focused review is ready when you are'
     : 'You’re all caught up'
-}
-
-function formatSignedPoints(
-  delta: number,
-): string {
-  const points = Math.round(
-    delta * 100,
-  )
-
-  return `${points >= 0 ? '+' : ''}${points} pts`
 }
 
 function RhythmEmptyState({
@@ -791,6 +472,7 @@ function RhythmEmptyState({
 function formatHour(hour: number): string {
   const suffix = hour >= 12 ? 'PM' : 'AM'
   const displayHour = hour % 12 || 12
+
   return `${displayHour}:00 ${suffix}`
 }
 
@@ -832,107 +514,59 @@ function RhythmSparkline({
     )
   }
 
-  const values =
-    signals.map(
-      (signal) => {
-        const latency =
-          Math.abs(
-            zScore(
-              signal.interKeyLatency,
-              baseline.interKeyLatency,
-            ),
-          )
-
-        const dwell =
-          Math.abs(
-            zScore(
-              signal.dwellTime,
-              baseline.dwellTime,
-            ),
-          )
-
-        const correction =
-          Math.abs(
-            zScore(
-              signal.correctionRate,
-              baseline.correctionRate,
-            ),
-          )
-
-        const wpm =
-          Math.abs(
-            zScore(
-              signal.wpm,
-              baseline.wpm,
-            ),
-          )
-
-        return (
-          (latency +
-            dwell +
-            correction +
-            wpm) /
-          4
-        )
-      },
+  const values = signals.map((signal) => {
+    const latency = Math.abs(
+      zScore(
+        signal.interKeyLatency,
+        baseline.interKeyLatency,
+      ),
     )
+
+    const dwell = Math.abs(
+      zScore(
+        signal.dwellTime,
+        baseline.dwellTime,
+      ),
+    )
+
+    const correction = Math.abs(
+      zScore(
+        signal.correctionRate,
+        baseline.correctionRate,
+      ),
+    )
+
+    const wpm = Math.abs(
+      zScore(signal.wpm, baseline.wpm),
+    )
+
+    return (
+      (latency + dwell + correction + wpm) /
+      4
+    )
+  })
 
   const width = 240
   const height = 56
 
-  const max =
-    Math.max(
-      1,
-      ...values,
-    )
-
-  const min =
-    Math.min(
-      0,
-      ...values,
-    )
-
-  const range =
-    Math.max(
-      0.001,
-      max - min,
-    )
+  const max = Math.max(1, ...values)
+  const min = Math.min(0, ...values)
+  const range = Math.max(0.001, max - min)
 
   const step =
-    width /
-    Math.max(
-      1,
-      values.length - 1,
-    )
+    width / Math.max(1, values.length - 1)
 
-  const path =
-    values
-      .map(
-        (
-          value,
-          index,
-        ) => {
-          const x =
-            index *
-            step
+  const path = values
+    .map((value, index) => {
+      const x = index * step
+      const normalized =
+        (value - min) / range
+      const y =
+        height - normalized * height
 
-          const normalized =
-            (value - min) /
-            range
-
-          const y =
-            height -
-            normalized *
-              height
-
-          return `${
-            index === 0
-              ? 'M'
-              : 'L'
-          }${x},${y}`
-        },
-      )
-      .join(' ')
+      return `${index === 0 ? 'M' : 'L'}${x},${y}`
+    })
+    .join(' ')
 
   return (
     <div>
