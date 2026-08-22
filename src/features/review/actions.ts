@@ -1,10 +1,8 @@
-import { GradeSchema } from './schemas'
-import { persistGrade as servicePersistGrade } from './reviewService'
 import type { Card } from '#/shared/types/domain'
 import type { AggregatedFeatures } from '#/shared/lib/signals'
 
-// Actions — React 19 mutations (Guide §18, §19)
-// Thin: validate → service → domain → repository. No SQL here.
+import { GradeSchema } from './schemas'
+import { submitReview } from './application/submitReview'
 
 export async function submitGradeAction(params: {
   card: Card
@@ -13,10 +11,11 @@ export async function submitGradeAction(params: {
   startedAt: number
   live: AggregatedFeatures | null
 }) {
-  const parsedGrade = GradeSchema.parse(params.grade)
-  return servicePersistGrade({
+  const grade = GradeSchema.parse(params.grade)
+
+  return submitReview({
     card: params.card,
-    grade: parsedGrade,
+    grade,
     sessionId: params.sessionId,
     startedAt: params.startedAt,
     live: params.live,

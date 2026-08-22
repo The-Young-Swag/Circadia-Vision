@@ -12,6 +12,7 @@ import {
   DEFAULT_ALPHA,
   updateEwma,
 } from '#/shared/lib/baseline'
+
 import type { AggregatedFeatures } from '#/shared/lib/signals'
 
 import { baselineRepository } from '#/shared/repositories/baselineRepository'
