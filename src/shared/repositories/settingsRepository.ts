@@ -6,23 +6,54 @@ import {
 } from '#/shared/lib/db/dexie'
 
 export const settingsRepository = {
-  async getAdaptiveOptIn(): Promise<boolean | null> {
-    return getSetting<boolean | null>(SETTINGS_KEYS.adaptiveOptIn, null)
+  getAdaptiveOptIn(): Promise<boolean | null> {
+    return getSetting<boolean | null>(
+      SETTINGS_KEYS.adaptiveOptIn,
+      null,
+    )
   },
 
-  async setAdaptiveOptIn(value: boolean): Promise<void> {
-    await setSetting(SETTINGS_KEYS.adaptiveOptIn, value)
+  setAdaptiveOptIn(
+    value: boolean,
+  ): Promise<void> {
+    return setSetting(
+      SETTINGS_KEYS.adaptiveOptIn,
+      value,
+    )
   },
 
-  async getCalibrationSessions(): Promise<number> {
-    return getSetting<number>(SETTINGS_KEYS.calibrationSessions, 0)
+  getCalibrationSessions(): Promise<number> {
+    return getSetting<number>(
+      SETTINGS_KEYS.calibrationSessions,
+      0,
+    )
   },
 
-  async setCalibrationSessions(n: number): Promise<void> {
-    await setSetting(SETTINGS_KEYS.calibrationSessions, n)
+  setCalibrationSessions(
+    count: number,
+  ): Promise<void> {
+    return setSetting(
+      SETTINGS_KEYS.calibrationSessions,
+      count,
+    )
   },
 
-  async getAllSettings() {
+  getMetric(key: string): Promise<number> {
+    return getSetting<number>(key, 0)
+  },
+
+  setMetric(
+    key: string,
+    value: number,
+  ): Promise<void> {
+    return setSetting(key, value)
+  },
+
+  getAllSettings() {
     return db.appSettings.toArray()
+  },
+
+  clear(): Promise<void> {
+    return db.appSettings.clear()
   },
 }

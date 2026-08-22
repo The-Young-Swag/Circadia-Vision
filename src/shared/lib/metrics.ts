@@ -1,12 +1,6 @@
-/**
- * KPI instrumentation per Brief §6 — Level 2 & North Star
- * Calibration completion rate and adaptive override/dismiss rate are first-class health metrics.
- * Stored locally (Dexie appSettings) — no backend needed, offline-first.
- */
+import { settingsRepository } from '#/shared/repositories/settingsRepository'
 
-import { getSetting, setSetting } from '#/shared/lib/db/dexie'
-
-const KEYS = {
+const METRIC_KEYS = {
   calibrationAttempts: 'metrics:calibrationAttempts',
   calibrationCompletions: 'metrics:calibrationCompletions',
   adaptiveOffers: 'metrics:adaptiveOffers',
@@ -14,46 +8,99 @@ const KEYS = {
   adaptiveOverrides: 'metrics:adaptiveOverrides',
 } as const
 
-async function inc(key: string): Promise<number> {
-  const cur = await getSetting<number>(key, 0)
-  const next = cur + 1
-  await setSetting(key, next)
+type MetricKey =
+  (typeof METRIC_KEYS)[keyof typeof METRIC_KEYS]
+
+async function incrementMetric(
+  key: MetricKey,
+): Promise<number> {
+  const current =
+    await settingsRepository.getMetric(key)
+
+  const next = current + 1
+
+  await settingsRepository.setMetric(key, next)
+
   return next
 }
 
-export async function trackCalibrationAttempt() {
-  await inc(KEYS.calibrationAttempts)
+export async function trackCalibrationAttempt(): Promise<void> {
+  await incrementMetric(
+    METRIC_KEYS.calibrationAttempts,
+  )
 }
 
-export async function trackCalibrationCompletion() {
-  await inc(KEYS.calibrationCompletions)
+export async function trackCalibrationCompletion(): Promise<void> {
+  await incrementMetric(
+    METRIC_KEYS.calibrationCompletions,
+  )
 }
 
-export async function trackAdaptiveOffer() {
-  await inc(KEYS.adaptiveOffers)
+export async function trackAdaptiveOffer(): Promise<void> {
+  await incrementMetric(
+    METRIC_KEYS.adaptiveOffers,
+  )
 }
 
-export async function trackAdaptiveDismiss() {
-  await inc(KEYS.adaptiveDismissals)
+export async function trackAdaptiveDismiss(): Promise<void> {
+  await incrementMetric(
+    METRIC_KEYS.adaptiveDismissals,
+  )
 }
 
-export async function trackAdaptiveOverride() {
-  await inc(KEYS.adaptiveOverrides)
+export async function trackAdaptiveOverride(): Promise<void> {
+  await incrementMetric(
+    METRIC_KEYS.adaptiveOverrides,
+  )
 }
 
 export async function getMetrics() {
-  const [attempts, completions, offers, dismissals, overrides] =
-    await Promise.all([
-      getSetting<number>(KEYS.calibrationAttempts, 0),
-      getSetting<number>(KEYS.calibrationCompletions, 0),
-      getSetting<number>(KEYS.adaptiveOffers, 0),
-      getSetting<number>(KEYS.adaptiveDismissals, 0),
-      getSetting<number>(KEYS.adaptiveOverrides, 0),
-    ])
+  const [
+    attempts,
+    completions,
+    offers,
+    dismissals,
+    overrides,
+  ] = await Promise.all([
+    settingsRepository.getMetric(
+      METRIC_KEYS.calibrationAttempts,
+    ),
+    settingsRepository.getMetric(
+      METRIC_KEYS.calibrationCompletions,
+    ),
+    settingsRepository.getMetric(
+      METRIC_KEYS.adaptiveOffers,
+    ),
+    settingsRepository.getMetric(
+      METRIC_KEYS.adaptiveDismissals,
+    ),
+    settingsRepository.getMetric(
+      METRIC_KEYS.adaptiveOverrides,
+    ),
+  ])
+
   return {
-    calibrationCompletionRate: attempts ? completions / attempts : null,
-    adaptiveDismissRate: offers ? dismissals / offers : null,
-    adaptiveOverrideRate: offers ? overrides / offers : null,
-    raw: { attempts, completions, offers, dismissals, overrides },
+    calibrationCompletionRate:
+      attempts > 0
+        ? completions / attempts
+        : null,
+
+    adaptiveDismissRate:
+      offers > 0
+        ? dismissals / offers
+        : null,
+
+    adaptiveOverrideRate:
+      offers > 0
+        ? overrides / offers
+        : null,
+
+    raw: {
+      attempts,
+      completions,
+      offers,
+      dismissals,
+      overrides,
+    },
   }
 }
