@@ -6,11 +6,23 @@ export const insightRepository = {
     return db.insights.toArray()
   },
 
+  async findActive(): Promise<Insight[]> {
+    return db.insights
+      .filter((insight) => !insight.dismissed)
+      .toArray()
+  },
+
   async create(insight: Insight): Promise<void> {
     await db.insights.add(insight)
   },
 
-  async clearAll(): Promise<void> {
+  async dismiss(id: string): Promise<void> {
+    await db.insights.update(id, {
+      dismissed: true,
+    })
+  },
+
+  async clear(): Promise<void> {
     await db.insights.clear()
   },
 }
