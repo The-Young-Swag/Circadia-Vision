@@ -1,34 +1,43 @@
-import { useEffect, useState } from 'react'
+import {
+  useEffect,
+  useState,
+} from 'react'
 
 import { getInsights } from '#/features/insights/queries'
 
-type InsightsData = Awaited<ReturnType<typeof getInsights>>
-
-const REFRESH_INTERVAL = 2000
+type InsightsData = Awaited<
+  ReturnType<typeof getInsights>
+>
 
 export function useInsights() {
-  const [data, setData] = useState<InsightsData | null>(null)
+  const [data, setData] =
+    useState<InsightsData | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
     async function loadInsights() {
-      const nextData = await getInsights()
+      try {
+        const nextData =
+          await getInsights()
 
-      if (!cancelled) {
-        setData(nextData)
+        if (!cancelled) {
+          setData(nextData)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error(
+            'Failed to load insights:',
+            error,
+          )
+        }
       }
     }
 
     void loadInsights()
 
-    const intervalId = window.setInterval(() => {
-      void loadInsights()
-    }, REFRESH_INTERVAL)
-
     return () => {
       cancelled = true
-      window.clearInterval(intervalId)
     }
   }, [])
 
