@@ -6,8 +6,8 @@ import { liveQuery } from 'dexie'
 
 import type { Card } from '#/shared/types/domain'
 
-import { db } from '#/shared/lib/db/dexie'
 import { seedIfEmpty } from '#/shared/lib/db/seed'
+import { cardRepository } from '#/shared/repositories/cardRepository'
 
 export function useLibraryData() {
   const [cards, setCards] =
@@ -31,7 +31,7 @@ export function useLibraryData() {
         }
 
         const observable = liveQuery(
-          () => db.cards.toArray(),
+          () => cardRepository.findAll(),
         )
 
         const subscription =
