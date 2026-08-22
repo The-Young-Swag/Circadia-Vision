@@ -6,10 +6,6 @@ export const cardRepository = {
     return db.cards.toArray()
   },
 
-  async findDue(todayISO: string): Promise<Card[]> {
-    return db.cards.where('dueDate').belowOrEqual(todayISO).toArray()
-  },
-
   async findById(id: string): Promise<Card | undefined> {
     return db.cards.get(id)
   },
@@ -18,13 +14,10 @@ export const cardRepository = {
     await db.cards.add(card)
   },
 
-  async createMany(cards: Card[]): Promise<void> {
-    if (cards.length === 0) return
-
-    await db.cards.bulkAdd(cards)
-  },
-
-  async update(id: string, patch: Partial<Card>): Promise<void> {
+  async update(
+    id: string,
+    patch: Partial<Card>,
+  ): Promise<void> {
     await db.cards.update(id, patch)
   },
 
@@ -32,7 +25,7 @@ export const cardRepository = {
     await db.cards.delete(id)
   },
 
-  async count(): Promise<number> {
-    return db.cards.count()
+  async clear(): Promise<void> {
+    await db.cards.clear()
   },
 }
