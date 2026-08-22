@@ -1,323 +1,522 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
+  GraduationCap,
   LayoutDashboard,
   Library,
-  GraduationCap,
   LineChart,
-  ShieldCheck,
-  Moon,
-  Sun,
   Menu,
-  X,
+  Moon,
   MoreHorizontal,
+  ShieldCheck,
+  Sun,
+  X,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
+
+import { useTheme } from '#/shared/hooks/useTheme'
+import type { Theme } from '#/shared/hooks/useTheme'
 
 type NavItem = {
   to: string
   label: string
-  icon: typeof LayoutDashboard
-  meta?: string
+  icon: LucideIcon
+  meta: string
 }
 
-const PRIMARY: NavItem[] = [
-  { to: '/', label: 'Home', icon: LayoutDashboard, meta: 'OVERVIEW' },
-  { to: '/review', label: 'Review', icon: GraduationCap, meta: 'SESSION' },
-  { to: '/library', label: 'Library', icon: Library, meta: 'COLLECTION' },
-  { to: '/insights', label: 'Insights', icon: LineChart, meta: 'ANALYTICS' },
+const PRIMARY_NAV_ITEMS: NavItem[] = [
+  {
+    to: '/',
+    label: 'Home',
+    icon: LayoutDashboard,
+    meta: 'OVERVIEW',
+  },
+  {
+    to: '/review',
+    label: 'Review',
+    icon: GraduationCap,
+    meta: 'SESSION',
+  },
+  {
+    to: '/library',
+    label: 'Library',
+    icon: Library,
+    meta: 'COLLECTION',
+  },
+  {
+    to: '/insights',
+    label: 'Insights',
+    icon: LineChart,
+    meta: 'ANALYTICS',
+  },
 ]
 
-const SECONDARY: NavItem[] = [
-  { to: '/privacy', label: 'Privacy', icon: ShieldCheck, meta: 'CONTROL' },
+const SECONDARY_NAV_ITEMS: NavItem[] = [
+  {
+    to: '/privacy',
+    label: 'Privacy',
+    icon: ShieldCheck,
+    meta: 'CONTROL',
+  },
+]
+
+const MOBILE_PRIMARY_ITEMS = PRIMARY_NAV_ITEMS.slice(0, 3)
+const MOBILE_MORE_ITEMS = [
+  ...PRIMARY_NAV_ITEMS.slice(3),
+  ...SECONDARY_NAV_ITEMS,
 ]
 
 export default function Sidebar() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
-    typeof window !== 'undefined' &&
-    document.documentElement.classList.contains('dark')
-      ? 'dark'
-      : 'light',
-  )
+  const { theme, toggleTheme } = useTheme()
+
   const [mobileOpen, setMobileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
 
-  const isReview = useRouterState({
-    select: (s) => s.location.pathname.startsWith('/review'),
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
   })
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('theme', theme)
-  }, [theme])
+  const isReview = pathname.startsWith('/review')
 
   useEffect(() => {
-    const close = () => {
-      setMobileOpen(false)
-      setMoreOpen(false)
-    }
-    window.addEventListener('popstate', close)
-    return () => window.removeEventListener('popstate', close)
-  }, [])
-
-  // During review, minimize chrome — hide sidebar labels, keep minimal
-  const reviewMinimized = isReview
+    setMobileOpen(false)
+    setMoreOpen(false)
+  }, [pathname])
 
   return (
     <>
-      {/* Mobile top bar — only when not in review minimal */}
-      {!reviewMinimized && (
-        <div className="lg:hidden sticky top-0 z-40 flex h-[56px] items-center justify-between border-b border-[var(--line)] bg-[var(--surface)] px-4">
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--racing)] text-white">
-              <span className="h-2.5 w-2.5 rounded-full bg-[var(--emerald)]" />
-            </span>
-            <span className="display text-[18px] tracking-tight text-[var(--ink)]">
-              Circadia
-            </span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <button
-              aria-label="Toggle theme"
-              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-              className="h-9 w-9 grid place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--ink-soft)]"
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <button
-              aria-label="Open navigation"
-              onClick={() => setMobileOpen(true)}
-              className="h-9 w-9 grid place-items-center rounded-full bg-[var(--racing)] text-white"
-            >
-              <Menu size={18} />
-            </button>
-          </div>
-        </div>
+      {!isReview && (
+        <MobileHeader
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onOpenNavigation={() => setMobileOpen(true)}
+        />
       )}
 
-      {/* Mobile bottom nav — per §11, hidden during review to minimize chrome */}
-      {!reviewMinimized && (
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--line)] bg-[var(--surface)] px-2 py-2 flex items-center justify-around safe-area-pb">
-          {PRIMARY.slice(0, 3).map((item) => (
-            <MobileTab key={item.to} item={item} />
-          ))}
-          <button
-            onClick={() => setMoreOpen((v) => !v)}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[var(--ink-soft)]"
-            aria-expanded={moreOpen}
-            aria-label="More"
-          >
-            <MoreHorizontal size={20} />
-            <span className="mono-label text-[10px]">MORE</span>
-          </button>
-        </nav>
+      {!isReview && (
+        <MobileBottomNavigation
+          moreOpen={moreOpen}
+          onToggleMore={() => setMoreOpen((open) => !open)}
+        />
       )}
 
-      {/* Mobile More sheet */}
       {moreOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          <button
-            className="flex-1 bg-black/30"
-            onClick={() => setMoreOpen(false)}
-            aria-label="Close more"
-          />
-          <div className="bg-[var(--surface)] border-t border-[var(--line)] rounded-t-2xl p-4 space-y-2">
-            {[...PRIMARY.slice(3), ...SECONDARY].map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMoreOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl border border-[var(--line)]"
-              >
-                <item.icon size={18} />
-                <span className="font-medium">{item.label}</span>
-                <span className="ml-auto mono-label">{item.meta}</span>
-              </Link>
-            ))}
-            <button
-              onClick={() => setMoreOpen(false)}
-              className="w-full btn-ghost mt-2"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <MobileMoreSheet
+          items={MOBILE_MORE_ITEMS}
+          onClose={() => setMoreOpen(false)}
+        />
       )}
 
-      {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          <button
-            aria-label="Close navigation"
-            className="flex-1 bg-black/40 backdrop-blur-[2px]"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="w-[300px] max-w-[84vw] bg-[var(--sidebar)] border-l border-[var(--sidebar-border)] flex flex-col shadow-2xl">
-            <div className="h-[56px] flex items-center justify-between px-4 border-b border-[var(--sidebar-border)]">
-              <span className="mono-label text-[var(--ink-faint)]">
-                NAVIGATION
-              </span>
-              <button
-                aria-label="Close"
-                onClick={() => setMobileOpen(false)}
-                className="h-8 w-8 grid place-items-center rounded-full border border-[var(--line)]"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <SidebarNav
-                onNavigate={() => setMobileOpen(false)}
-                collapsed={false}
-              />
-            </div>
-            <SidebarFooter
-              theme={theme}
-              setTheme={setTheme}
-              collapsed={false}
-            />
-          </div>
-        </div>
+        <MobileDrawer
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onClose={() => setMobileOpen(false)}
+        />
       )}
 
-      {/* Desktop sidebar — icon-only 72px, hover expands to 280px per §10 */}
-      <aside
-        className={`hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex-col sidebar-shell transition-all duration-200 group/sidebar ${collapsed ? 'lg:w-[72px] hover:lg:w-[280px]' : 'lg:w-[280px]'} ${reviewMinimized ? 'opacity-40 hover:opacity-100' : ''}`}
-        onMouseEnter={() => collapsed && setCollapsed(false)}
-        onMouseLeave={() => collapsed && setCollapsed(true)}
+      <DesktopSidebar
+        collapsed={collapsed}
+        isReview={isReview}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onToggleCollapsed={() => setCollapsed((value) => !value)}
+        onExpand={() => setCollapsed(false)}
+        onCollapse={() => setCollapsed(true)}
+      />
+    </>
+  )
+}
+
+type MobileHeaderProps = {
+  theme: Theme
+  onToggleTheme: () => void
+  onOpenNavigation: () => void
+}
+
+function MobileHeader({
+  theme,
+  onToggleTheme,
+  onOpenNavigation,
+}: MobileHeaderProps) {
+  return (
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-(--line) bg-(--surface) px-4 lg:hidden">
+      <Link
+        to="/"
+        className="flex items-center gap-2.5 no-underline"
       >
-        <div className="flex h-[72px] items-center gap-3 px-4 border-b border-[var(--sidebar-border)] shrink-0">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--racing)] text-white shadow-sm shrink-0">
-            <span className="h-3 w-3 rounded-full bg-[var(--emerald)]" />
+        <BrandMark />
+
+        <span className="display text-lg tracking-tight text-(--ink)">
+          Circadia
+        </span>
+      </Link>
+
+      <div className="flex items-center gap-2">
+        <ThemeToggle
+          theme={theme}
+          onToggle={onToggleTheme}
+        />
+
+        <button
+          type="button"
+          aria-label="Open navigation"
+          onClick={onOpenNavigation}
+          className="grid h-9 w-9 place-items-center rounded-full bg-(--racing) text-white"
+        >
+          <Menu size={18} aria-hidden="true" />
+        </button>
+      </div>
+    </header>
+  )
+}
+
+function MobileBottomNavigation({
+  moreOpen,
+  onToggleMore,
+}: {
+  moreOpen: boolean
+  onToggleMore: () => void
+}) {
+  return (
+    <nav
+      aria-label="Mobile navigation"
+      className="safe-area-pb fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-(--line) bg-(--surface) px-2 py-2 lg:hidden"
+    >
+      {MOBILE_PRIMARY_ITEMS.map((item) => (
+        <MobileTab key={item.to} item={item} />
+      ))}
+
+      <button
+        type="button"
+        aria-label="More navigation options"
+        aria-expanded={moreOpen}
+        onClick={onToggleMore}
+        className="flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-(--ink-soft)"
+      >
+        <MoreHorizontal size={20} aria-hidden="true" />
+        <span className="mono-label text-[10px]">MORE</span>
+      </button>
+    </nav>
+  )
+}
+
+function MobileMoreSheet({
+  items,
+  onClose,
+}: {
+  items: NavItem[]
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end lg:hidden">
+      <button
+        type="button"
+        aria-label="Close more navigation"
+        onClick={onClose}
+        className="flex-1 bg-black/30"
+      />
+
+      <div className="space-y-2 rounded-t-2xl border-t border-(--line) bg-(--surface) p-4">
+        {items.map((item) => (
+          <MoreNavLink
+            key={item.to}
+            item={item}
+            onNavigate={onClose}
+          />
+        ))}
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="btn-ghost mt-2 w-full"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MoreNavLink({
+  item,
+  onNavigate,
+}: {
+  item: NavItem
+  onNavigate: () => void
+}) {
+  const Icon = item.icon
+
+  return (
+    <Link
+      to={item.to}
+      onClick={onNavigate}
+      className="flex items-center gap-3 rounded-xl border border-(--line) px-3 py-3"
+    >
+      <Icon size={18} aria-hidden="true" />
+
+      <span className="font-medium">
+        {item.label}
+      </span>
+
+      <span className="mono-label ml-auto">
+        {item.meta}
+      </span>
+    </Link>
+  )
+}
+
+function MobileDrawer({
+  theme,
+  onToggleTheme,
+  onClose,
+}: {
+  theme: Theme
+  onToggleTheme: () => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex lg:hidden">
+      <button
+        type="button"
+        aria-label="Close navigation"
+        onClick={onClose}
+        className="flex-1 bg-black/40 backdrop-blur-[2px]"
+      />
+
+      <aside className="flex w-75 max-w-[84vw] flex-col border-l border-sidebar-border bg-sidebar shadow-2xl">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
+          <span className="mono-label text-(--ink-faint)">
+            NAVIGATION
           </span>
-          {!collapsed && (
-            <div className="leading-none min-w-0">
-              <div className="display text-[20px] tracking-tight truncate">
-                Circadia
-              </div>
-              <div className="mono-label mt-1 text-[var(--ink-faint)] truncate">
-                ADAPTIVE STUDY
-              </div>
-            </div>
-          )}
+
           <button
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            onClick={() => setCollapsed((v) => !v)}
-            className="ml-auto h-7 w-7 hidden lg:grid place-items-center rounded-full border border-[var(--sidebar-border)] text-[var(--ink-faint)] hover:bg-[var(--sidebar-accent)]"
+            type="button"
+            aria-label="Close navigation"
+            onClick={onClose}
+            className="grid h-8 w-8 place-items-center rounded-full border border-(--line)"
           >
-            <span className="mono-label text-[10px]">
-              {collapsed ? '→' : '←'}
-            </span>
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-auto px-3 py-6 space-y-6">
-          <SidebarNav collapsed={collapsed} />
+        <nav className="flex-1 overflow-auto p-4">
+          <SidebarNav
+            onNavigate={onClose}
+          />
         </nav>
 
         <SidebarFooter
           theme={theme}
-          setTheme={setTheme}
-          collapsed={collapsed}
+          onToggleTheme={onToggleTheme}
         />
       </aside>
-    </>
+    </div>
+  )
+}
+
+type DesktopSidebarProps = {
+  collapsed: boolean
+  isReview: boolean
+  theme: Theme
+  onToggleTheme: () => void
+  onToggleCollapsed: () => void
+  onExpand: () => void
+  onCollapse: () => void
+}
+
+function DesktopSidebar({
+  collapsed,
+  isReview,
+  theme,
+  onToggleTheme,
+  onToggleCollapsed,
+  onExpand,
+  onCollapse,
+}: DesktopSidebarProps) {
+  const widthClass = collapsed
+    ? 'lg:w-[72px] hover:lg:w-[280px]'
+    : 'lg:w-[280px]'
+
+  const reviewClass = isReview
+    ? 'opacity-40 hover:opacity-100'
+    : ''
+
+  return (
+    <aside
+      className={`sidebar-shell group/sidebar fixed inset-y-0 left-0 z-30 hidden flex-col transition-all duration-200 lg:flex ${widthClass} ${reviewClass}`}
+      onMouseEnter={collapsed ? onExpand : undefined}
+      onMouseLeave={collapsed ? onCollapse : undefined}
+    >
+      <div className="flex h-18 shrink-0 items-center gap-3 border-b border-sidebar-border px-4">
+        <BrandMark />
+
+        {!collapsed && (
+          <div className="min-w-0 leading-none">
+            <div className="display truncate text-xl tracking-tight">
+              Circadia
+            </div>
+
+            <div className="mono-label mt-1 truncate text-(--ink-faint)">
+              ADAPTIVE STUDY
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          onClick={onToggleCollapsed}
+          className="ml-auto hidden h-7 w-7 place-items-center rounded-full border border-sidebar-border text-(--ink-faint) hover:bg-sidebar-accent lg:grid"
+        >
+          <span className="mono-label text-[10px]" aria-hidden="true">
+            {collapsed ? '→' : '←'}
+          </span>
+        </button>
+      </div>
+
+      <nav
+        aria-label="Sidebar navigation"
+        className="flex-1 space-y-6 overflow-auto px-3 py-6"
+      >
+        <SidebarNav collapsed={collapsed} />
+      </nav>
+
+      <SidebarFooter
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+        collapsed={collapsed}
+      />
+    </aside>
   )
 }
 
 function MobileTab({ item }: { item: NavItem }) {
   const Icon = item.icon
+
   return (
     <Link
       to={item.to}
-      className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[var(--ink-soft)]"
+      className="flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-(--ink-soft)"
       activeProps={{
         className:
-          'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl bg-[var(--racing)] text-white',
+          'flex flex-col items-center gap-1 rounded-xl bg-(--racing) px-3 py-1.5 text-white',
       }}
     >
-      <Icon size={20} />
-      <span className="mono-label text-[10px]">{item.label.toUpperCase()}</span>
+      <Icon size={20} aria-hidden="true" />
+
+      <span className="mono-label text-[10px]">
+        {item.label.toUpperCase()}
+      </span>
     </Link>
   )
 }
 
 function SidebarNav({
   onNavigate,
-  collapsed,
+  collapsed = false,
 }: {
   onNavigate?: () => void
   collapsed?: boolean
 }) {
   return (
     <div className="space-y-6">
-      <div>
-        <div
-          className={`sidebar-kicker px-2 mb-2 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
-        >
-          Study
-        </div>
-        <div className="space-y-1">
-          {PRIMARY.map((item) => (
-            <NavLink
-              key={item.to}
-              item={item}
-              onNavigate={onNavigate}
-              collapsed={collapsed}
-            />
-          ))}
-        </div>
-      </div>
-      <div>
-        <div
-          className={`sidebar-kicker px-2 mb-2 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
-        >
-          Intelligence
-        </div>
-        <div className="space-y-1">
-          {SECONDARY.map((item) => (
-            <NavLink
-              key={item.to}
-              item={item}
-              onNavigate={onNavigate}
-              collapsed={collapsed}
-            />
-          ))}
-        </div>
-      </div>
+      <NavSection
+        label="Study"
+        items={PRIMARY_NAV_ITEMS}
+        collapsed={collapsed}
+        onNavigate={onNavigate}
+      />
+
+      <NavSection
+        label="Intelligence"
+        items={SECONDARY_NAV_ITEMS}
+        collapsed={collapsed}
+        onNavigate={onNavigate}
+      />
     </div>
   )
 }
 
-function NavLink({
-  item,
-  onNavigate,
+function NavSection({
+  label,
+  items,
   collapsed,
+  onNavigate,
+}: {
+  label: string
+  items: NavItem[]
+  collapsed: boolean
+  onNavigate?: () => void
+}) {
+  const labelClass = collapsed
+    ? 'hidden group-hover/sidebar:block'
+    : ''
+
+  return (
+    <section>
+      <div
+        className={`sidebar-kicker mb-2 px-2 ${labelClass}`}
+      >
+        {label}
+      </div>
+
+      <div className="space-y-1">
+        {items.map((item) => (
+          <SidebarNavLink
+            key={item.to}
+            item={item}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function SidebarNavLink({
+  item,
+  collapsed,
+  onNavigate,
 }: {
   item: NavItem
+  collapsed: boolean
   onNavigate?: () => void
-  collapsed?: boolean
 }) {
   const Icon = item.icon
+
+  const contentClass = collapsed
+    ? 'hidden group-hover/sidebar:block'
+    : ''
+
   return (
     <Link
       to={item.to}
       onClick={onNavigate}
-      className="sidebar-link group"
-      activeProps={{ className: 'sidebar-link is-active group' }}
       title={collapsed ? item.label : undefined}
+      className="sidebar-link group"
+      activeProps={{
+        className: 'sidebar-link is-active group',
+      }}
     >
-      <span className="h-8 w-8 grid place-items-center rounded-lg bg-[var(--surface-muted)] border border-[var(--line)] group-[.is-active]:bg-white/15 group-[.is-active]:border-white/20 transition-colors shrink-0">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-(--line) bg-(--surface-muted) transition-colors group-[.is-active]:border-white/20 group-[.is-active]:bg-white/15">
         <Icon
           size={16}
-          className="text-[var(--ink-soft)] group-[.is-active]:text-white"
+          aria-hidden="true"
+          className="text-(--ink-soft) group-[.is-active]:text-white"
         />
       </span>
+
       <span
-        className={`flex-1 leading-none min-w-0 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
+        className={`min-w-0 flex-1 leading-none ${contentClass}`}
       >
-        <span className="block text-[14px] truncate">{item.label}</span>
-        <span className="mono-label text-[10px] leading-none opacity-60 group-[.is-active]:opacity-80 truncate">
+        <span className="block truncate text-sm">
+          {item.label}
+        </span>
+
+        <span className="mono-label block truncate text-[10px] leading-none opacity-60 group-[.is-active]:opacity-80">
           {item.meta}
         </span>
       </span>
@@ -327,64 +526,127 @@ function NavLink({
 
 function SidebarFooter({
   theme,
-  setTheme,
-  collapsed,
+  onToggleTheme,
+  collapsed = false,
 }: {
-  theme: 'light' | 'dark'
-  setTheme: (v: 'light' | 'dark') => void
+  theme: Theme
+  onToggleTheme: () => void
   collapsed?: boolean
 }) {
   return (
     <>
-      {/* Collapsed — icon only, hover reveals full */}
+      {collapsed && (
+        <div className="flex flex-col items-center gap-2 border-t border-sidebar-border p-2 group-hover/sidebar:hidden">
+          <SignalStatus />
+
+          <ThemeToggle
+            theme={theme}
+            onToggle={onToggleTheme}
+          />
+        </div>
+      )}
+
       <div
-        className={`border-t border-[var(--sidebar-border)] p-2 flex flex-col items-center gap-2 ${collapsed ? 'flex group-hover/sidebar:hidden' : 'hidden'}`}
+        className={`space-y-3 border-t border-sidebar-border p-4 ${
+          collapsed ? 'hidden group-hover/sidebar:block' : ''
+        }`}
       >
-        <span
-          className="h-2 w-2 rounded-full bg-[var(--emerald)] animate-pulse"
-          title="Personal signal active"
-        />
-        <button
-          aria-label="Toggle theme"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="h-8 w-8 grid place-items-center rounded-full border border-[var(--line)]"
-        >
-          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-        </button>
-      </div>
-      <div
-        className={`border-t border-[var(--sidebar-border)] p-4 space-y-3 ${collapsed ? 'hidden group-hover/sidebar:block' : ''}`}
-      >
-        <div className="rounded-xl bg-[var(--surface-muted)] border border-[var(--line)] p-3">
-          <div className="mono-label">Personal signal</div>
-          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[var(--ink-faint)]">
-            <span
-              className="h-2 w-2 rounded-full bg-[var(--emerald)] animate-pulse"
-              aria-hidden
-            />{' '}
-            Personal signal active
+        <div className="rounded-xl border border-(--line) bg-(--surface-muted) p-3">
+          <div className="mono-label">
+            Personal signal
           </div>
+
+          <SignalStatus showLabel />
+
           <div className="mono-label mt-1 opacity-70">
             On this device • Never key content
           </div>
         </div>
-        <button
-          aria-label="Toggle theme"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="w-full flex items-center justify-between rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-muted)]"
-        >
-          <span className="flex items-center gap-2">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}{' '}
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </span>
-          <span className="mono-label text-[10px] px-2 py-1 rounded-full bg-[var(--racing)] text-white">
-            {theme === 'dark' ? 'DARK' : 'LIGHT'}
-          </span>
-        </button>
+
+        <ThemeToggle
+          theme={theme}
+          onToggle={onToggleTheme}
+          expanded
+        />
+
         <div className="mono-label text-center opacity-60">
           © 2026 Circadia • Veridian/Emerald/BRG
         </div>
       </div>
     </>
+  )
+}
+
+function SignalStatus({
+  showLabel = false,
+}: {
+  showLabel?: boolean
+}) {
+  return (
+    <div className={showLabel ? 'mt-1.5 flex items-center gap-1.5 text-[11px] font-mono text-(--ink-faint)' : undefined}>
+      <span
+        className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-(--emerald)"
+        aria-hidden="true"
+        title="Personal signal active"
+      />
+
+      {showLabel && 'Personal signal active'}
+    </div>
+  )
+}
+
+function ThemeToggle({
+  theme,
+  onToggle,
+  expanded = false,
+}: {
+  theme: Theme
+  onToggle: () => void
+  expanded?: boolean
+}) {
+  const isDark = theme === 'dark'
+  const Icon = isDark ? Sun : Moon
+  const label = isDark ? 'Light mode' : 'Dark mode'
+
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        aria-label={`Switch to ${label.toLowerCase()}`}
+        onClick={onToggle}
+        className="grid h-8 w-8 place-items-center rounded-full border border-(--line)"
+      >
+        <Icon size={14} aria-hidden="true" />
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={`Switch to ${label.toLowerCase()}`}
+      onClick={onToggle}
+      className="flex w-full items-center justify-between rounded-full border border-(--line) bg-(--surface) px-3 py-2 text-sm font-medium hover:bg-(--surface-muted)"
+    >
+      <span className="flex items-center gap-2">
+        <Icon size={16} aria-hidden="true" />
+        {label}
+      </span>
+
+      <span className="mono-label rounded-full bg-(--racing) px-2 py-1 text-[10px] text-white">
+        {theme.toUpperCase()}
+      </span>
+    </button>
+  )
+}
+
+function BrandMark() {
+  return (
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-(--racing) text-white shadow-sm">
+      <span
+        className="h-3 w-3 rounded-full bg-(--emerald)"
+        aria-hidden="true"
+      />
+    </span>
   )
 }
