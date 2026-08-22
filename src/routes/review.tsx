@@ -159,7 +159,7 @@ function Review() {
       minutesRef.current.shift()
     }
 
-    void signalRepository.add({
+    void signalRepository.create({
       id: crypto.randomUUID().slice(0, 8),
       sessionId:
         sessionIdRef.current,
