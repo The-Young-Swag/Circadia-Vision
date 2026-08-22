@@ -36,10 +36,8 @@ import {
   import { GradeControls } from '#/features/review/components/GradeControls'
   import { SessionComplete } from '#/features/review/components/SessionComplete'
 
-  import {
-    completeCalibrationSession,
-    persistGrade,
-  } from '#/features/review/reviewService'
+  import { submitGradeAction } from '#/features/review/actions'
+  import { completeCalibrationSession } from '#/features/review/reviewService'
 
   import {
     trackAdaptiveDismiss,
@@ -204,7 +202,7 @@ import {
 
         const card = queue[idx]
 
-        await persistGrade({
+        await submitGradeAction({
           card,
           grade,
           sessionId: sessionIdRef.current,
