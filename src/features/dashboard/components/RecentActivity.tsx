@@ -1,4 +1,4 @@
-import type { Card, ReviewSession } from '#/shared/lib/db/dexie'
+import type { Card, ReviewSession } from '#/shared/types/domain'
 
 type RecentActivityProps = {
   sessions: ReviewSession[]
@@ -18,7 +18,7 @@ export function RecentActivity({ sessions, cards }: RecentActivityProps) {
           return (
             <div
               key={r.id}
-              className="flex gap-2.5 py-2 border-b last:border-0 border-[var(--line)]"
+              className="flex gap-2.5 py-2 border-b last:border-0 border-(--line)"
             >
               <span
                 className="mt-1 h-2 w-2 rounded-full shrink-0"
@@ -35,7 +35,7 @@ export function RecentActivity({ sessions, cards }: RecentActivityProps) {
                 <div className="text-sm leading-tight truncate">
                   {card?.front ?? 'Card'}
                 </div>
-                <div className="text-xs text-[var(--ink-faint)]">
+                <div className="text-xs text-(--ink-faint)">
                   {new Date(r.timestamp).toLocaleString()} ·{' '}
                   {['Again', 'Hard', 'Good', 'Easy'][r.grade]}
                 </div>
@@ -44,7 +44,7 @@ export function RecentActivity({ sessions, cards }: RecentActivityProps) {
           )
         })}
         {recent.length === 0 && (
-          <p className="text-sm text-[var(--ink-soft)]">
+          <p className="text-sm text-(--ink-soft)">
             No activity yet — start a review.
           </p>
         )}

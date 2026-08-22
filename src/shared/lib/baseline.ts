@@ -1,4 +1,4 @@
-import type { FeatureName } from '#/shared/lib/db/dexie'
+import type { FeatureName } from '#/shared/types/domain'
 
 export type BaselineSnapshot = {
   mean: number

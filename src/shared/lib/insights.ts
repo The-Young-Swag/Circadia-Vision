@@ -1,7 +1,7 @@
 import type {
   Card,
   ReviewSession,
-} from '#/shared/lib/db/dexie'
+} from '#/shared/types/domain'
 
 export type RetentionByTopic = {
   topic: string

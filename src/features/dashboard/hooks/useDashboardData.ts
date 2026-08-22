@@ -8,7 +8,7 @@ import type {
   Card,
   ReviewSession,
   SessionSignal,
-} from '#/shared/lib/db/dexie'
+} from '#/shared/types/domain'
 
 import { seedIfEmpty } from '#/shared/lib/db/seed'
 
