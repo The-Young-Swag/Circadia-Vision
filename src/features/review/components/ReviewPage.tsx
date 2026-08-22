@@ -22,9 +22,13 @@ import {
     recommendBreakMinutes,
   } from '#/shared/lib/baseline'
 
-  import { cardRepository } from '#/shared/repositories/cardRepository'
-  import { settingsRepository } from '#/shared/repositories/settingsRepository'
-  import { signalRepository } from '#/shared/repositories/signalRepository'
+  import {
+    completeCalibrationSession,
+    loadReviewData,
+    persistSignal,
+    refreshReviewCards,
+  } from '#/features/review/reviewService'
+
 
   import { useBaseline } from '#/shared/hooks/useBaseline'
 
@@ -37,12 +41,14 @@ import {
   import { SessionComplete } from '#/features/review/components/SessionComplete'
 
   import { submitGradeAction } from '#/features/review/actions'
-  import { completeCalibrationSession } from '#/features/review/reviewService'
+
 
   import {
     trackAdaptiveDismiss,
     trackAdaptiveOffer,
   } from '#/shared/lib/metrics'
+
+
 
   export function ReviewPage() {
     const [cards, setCards] = useState<Card[]>([])
@@ -100,22 +106,15 @@ import {
     useEffect(() => {
       async function load() {
         await seedIfEmpty()
-
-        const [
-          loadedCards,
+        const {
+          cards: loadedCards,
           adaptiveOptIn,
           calibrationSessions,
-        ] = await Promise.all([
-          cardRepository.findAll(),
-          settingsRepository.getAdaptiveOptIn(),
-          settingsRepository.getCalibrationSessions(),
-        ])
+        } = await loadReviewData()
 
         setCards(loadedCards)
-        setOptIn(adaptiveOptIn ?? false)
-        setCalibrationN(
-          Math.min(calibrationSessions, 5),
-        )
+        setOptIn(adaptiveOptIn)
+        setCalibrationN(calibrationSessions)
         setQueue(buildQueue(loadedCards))
       }
 
@@ -137,7 +136,7 @@ import {
         minutesRef.current.shift()
       }
 
-      void signalRepository.create({
+      void persistSignal({
         id: crypto.randomUUID().slice(0, 8),
         sessionId: sessionIdRef.current,
         minuteIndex: minutesRef.current.length - 1,
@@ -229,7 +228,7 @@ import {
         }
 
         const refreshedCards =
-          await cardRepository.findAll()
+        await refreshReviewCards()
 
         setCards(refreshedCards)
       },

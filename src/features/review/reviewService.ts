@@ -1,16 +1,24 @@
-import type { Card } from '#/shared/types/domain'
+import type {
+  Card,
+  SessionSignal,
+} from '#/shared/types/domain'
+
 import { GradeSchema } from '#/features/review/schemas'
+
 import { sm2 } from '#/shared/lib/sm2'
 import type { Grade } from '#/shared/lib/sm2'
+
 import {
   DEFAULT_ALPHA,
   updateEwma,
 } from '#/shared/lib/baseline'
 import type { AggregatedFeatures } from '#/shared/lib/signals'
+
 import { baselineRepository } from '#/shared/repositories/baselineRepository'
 import { cardRepository } from '#/shared/repositories/cardRepository'
 import { sessionRepository } from '#/shared/repositories/sessionRepository'
 import { settingsRepository } from '#/shared/repositories/settingsRepository'
+import { signalRepository } from '#/shared/repositories/signalRepository'
 
 type GradeResult = {
   nextInterval: number
@@ -77,7 +85,10 @@ export async function persistGrade(params: {
     sessionId: params.sessionId,
     timestamp: now.toISOString(),
     grade: params.grade,
-    durationMs: Math.max(0, Date.now() - params.startedAt),
+    durationMs: Math.max(
+      0,
+      Date.now() - params.startedAt,
+    ),
   })
 
   if (params.live) {
@@ -87,6 +98,12 @@ export async function persistGrade(params: {
   return {
     nextDueDate: result.nextDueDate,
   }
+}
+
+export async function persistSignal(
+  signal: SessionSignal,
+): Promise<void> {
+  await signalRepository.create(signal)
 }
 
 async function updateBaseline(
@@ -103,9 +120,12 @@ async function updateBaseline(
   ]
 
   for (const [name, value] of features) {
-    const row = await baselineRepository.getByName(name)
+    const row =
+      await baselineRepository.getByName(name)
 
-    if (!row) continue
+    if (!row) {
+      continue
+    }
 
     const next = updateEwma(
       {
@@ -132,9 +152,39 @@ async function updateBaseline(
 export async function completeCalibrationSession(
   currentN: number,
 ): Promise<number> {
-  const nextN = Math.min(Math.max(currentN, 0) + 1, 5)
+  const nextN = Math.min(
+    Math.max(currentN, 0) + 1,
+    5,
+  )
 
-  await settingsRepository.setCalibrationSessions(nextN)
+  await settingsRepository.setCalibrationSessions(
+    nextN,
+  )
 
   return nextN
+}
+
+export async function loadReviewData() {
+  const [
+    cards,
+    adaptiveOptIn,
+    calibrationSessions,
+  ] = await Promise.all([
+    cardRepository.findAll(),
+    settingsRepository.getAdaptiveOptIn(),
+    settingsRepository.getCalibrationSessions(),
+  ])
+
+  return {
+    cards,
+    adaptiveOptIn: adaptiveOptIn ?? false,
+    calibrationSessions: Math.min(
+      calibrationSessions,
+      5,
+    ),
+  }
+}
+
+export async function refreshReviewCards(): Promise<Card[]> {
+  return cardRepository.findAll()
 }
