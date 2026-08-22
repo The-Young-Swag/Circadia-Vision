@@ -1,9 +1,22 @@
 import { useMemo, useState } from 'react'
-import { Download, Filter, Plus, Search, Upload, X } from 'lucide-react'
+import {
+  Download,
+  Filter,
+  Plus,
+  Search,
+  Upload,
+  X,
+} from 'lucide-react'
 
 import type { Card } from '#/shared/types/domain'
-import { exportToJson, exportToMarkdown } from '#/shared/lib/import'
-import { cardRepository } from '#/shared/repositories/cardRepository'
+import {
+  exportToJson,
+  exportToMarkdown,
+} from '#/shared/lib/import'
+
+import {
+  deleteCardAction,
+} from '../actions'
 
 import { CardDialog } from './CardDialog'
 import { ImportWizard } from './ImportWizard'
@@ -11,13 +24,14 @@ import { LibraryTable } from './LibraryTable'
 import { useLibraryData } from '../hooks/useLibraryData'
 
 export function LibraryPage() {
-  const { cards, refresh } = useLibraryData()
+  const { cards, ready } = useLibraryData()
 
   const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
-  const [editingCard, setEditingCard] = useState<Card | undefined>()
+  const [editingCard, setEditingCard] =
+    useState<Card | undefined>()
 
   const filteredCards = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -29,7 +43,9 @@ export function LibraryPage() {
     return cards.filter((card) =>
       [card.front, card.back, card.topic]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(query)),
+        .some((value) =>
+          value.toLowerCase().includes(query),
+        ),
     )
   }, [cards, search])
 
@@ -44,19 +60,16 @@ export function LibraryPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await cardRepository.delete(id)
-    await refresh()
+    await deleteCardAction(id)
   }
 
-  const handleSaved = async () => {
+  const handleSaved = () => {
     setIsDialogOpen(false)
     setEditingCard(undefined)
-    await refresh()
   }
 
-  const handleImported = async () => {
+  const handleImported = () => {
     setIsImportOpen(false)
-    await refresh()
   }
 
   const handleExportJson = () => {
@@ -65,6 +78,16 @@ export function LibraryPage() {
 
   const handleExportMarkdown = () => {
     exportToMarkdown(cards)
+  }
+
+  if (!ready) {
+    return (
+      <section className="page-wrap py-8">
+        <div className="text-sm text-(--ink-faint)">
+          Loading your library…
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -102,7 +125,9 @@ export function LibraryPage() {
           <input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
             placeholder="Search cards..."
             className="w-full rounded-lg border border-(--line) bg-(--surface) py-2.5 pl-9 pr-9 text-sm text-(--ink) outline-none placeholder:text-(--ink-faint) focus:border-(--ink-soft)"
           />
@@ -121,7 +146,9 @@ export function LibraryPage() {
 
         <button
           type="button"
-          onClick={() => setShowFilters((current) => !current)}
+          onClick={() =>
+            setShowFilters((current) => !current)
+          }
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-(--line) bg-(--surface) px-4 py-2.5 text-sm text-(--ink-soft) hover:text-(--ink)"
         >
           <Filter size={16} />
@@ -145,7 +172,10 @@ export function LibraryPage() {
             title="Export JSON"
           >
             <Download size={16} />
-            <span className="hidden sm:inline">JSON</span>
+
+            <span className="hidden sm:inline">
+              JSON
+            </span>
           </button>
 
           <button
@@ -155,7 +185,10 @@ export function LibraryPage() {
             title="Export Markdown"
           >
             <Download size={16} />
-            <span className="hidden sm:inline">Markdown</span>
+
+            <span className="hidden sm:inline">
+              Markdown
+            </span>
           </button>
         </div>
       </div>
@@ -163,8 +196,8 @@ export function LibraryPage() {
       {showFilters && (
         <div className="mb-4 rounded-lg border border-(--line) bg-(--surface) p-4">
           <p className="text-sm text-(--ink-soft)">
-            Filtering options will be added here as library requirements
-            evolve.
+            Filtering options will be added here as library
+            requirements evolve.
           </p>
         </div>
       )}
